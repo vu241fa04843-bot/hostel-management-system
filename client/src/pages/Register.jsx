@@ -17,6 +17,7 @@ function Register() {
   });
 
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -33,6 +34,13 @@ function Register() {
       setMessage("Passwords do not match");
       return;
     }
+
+    if (formData.password.length < 8) {
+      setMessage("Password must contain at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       await API.post("/auth/register", {
@@ -51,56 +59,44 @@ function Register() {
       setMessage(
         error.response?.data?.message || "Registration failed"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      background: "#eef2f7",
-      padding: "20px"
-    }}>
-      <div style={{
-        width: "380px",
-        padding: "30px",
-        background: "white",
-        borderRadius: "12px",
-        boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
-      }}>
-        <h2 style={{ textAlign: "center" }}>
-          Student Registration
-        </h2>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Hostel Management</h1>
+        <h2 style={styles.heading}>Student Registration</h2>
 
         <form onSubmit={handleSubmit}>
           <input
             name="name"
-            placeholder="Enter your full name"
+            placeholder="Full Name"
             value={formData.name}
             onChange={handleChange}
             required
-            style={inputStyle}
+            style={styles.input}
           />
 
           <input
             type="email"
             name="email"
-            placeholder="Enter your email"
+            placeholder="Email Address"
             value={formData.email}
             onChange={handleChange}
             required
-            style={inputStyle}
+            style={styles.input}
           />
 
           <input
             name="registrationNumber"
-            placeholder="Enter registration number"
+            placeholder="Registration Number"
             value={formData.registrationNumber}
             onChange={handleChange}
             required
-            style={inputStyle}
+            style={styles.input}
           />
 
           <select
@@ -108,7 +104,7 @@ function Register() {
             value={formData.branch}
             onChange={handleChange}
             required
-            style={inputStyle}
+            style={styles.input}
           >
             <option value="">Select Branch</option>
             <option value="CSE">CSE</option>
@@ -125,7 +121,7 @@ function Register() {
             value={formData.yearOfStudy}
             onChange={handleChange}
             required
-            style={inputStyle}
+            style={styles.input}
           >
             <option value="">Select Year of Study</option>
             <option value="1st Year">1st Year</option>
@@ -137,58 +133,97 @@ function Register() {
           <input
             type="password"
             name="password"
-            placeholder="Create password (minimum 8 characters)"
+            placeholder="Create Password (minimum 8 characters)"
             value={formData.password}
             onChange={handleChange}
             minLength={8}
             required
-            style={inputStyle}
+            style={styles.input}
           />
 
           <input
             type="password"
             name="confirmPassword"
-            placeholder="Confirm password"
+            placeholder="Confirm Password"
             value={formData.confirmPassword}
             onChange={handleChange}
             required
-            style={inputStyle}
+            style={styles.input}
           />
 
-          <button type="submit" style={buttonStyle}>
-            Register
+          <button
+            type="submit"
+            disabled={loading}
+            style={styles.button}
+          >
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
 
         {message && (
-          <p style={{ color: "red", textAlign: "center" }}>
-            {message}
-          </p>
+          <p style={styles.message}>{message}</p>
         )}
 
-        <p style={{ textAlign: "center" }}>
-          Already registered? <Link to="/login">Login</Link>
+        <p style={styles.footer}>
+          Already registered? <Link to="/login">Login Here</Link>
         </p>
       </div>
     </div>
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  marginBottom: "15px",
-  boxSizing: "border-box"
-};
-
-const buttonStyle = {
-  width: "100%",
-  padding: "12px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer"
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#eef2f7",
+    padding: "20px",
+    fontFamily: "Arial, sans-serif"
+  },
+  card: {
+    width: "380px",
+    maxWidth: "100%",
+    padding: "30px",
+    background: "white",
+    borderRadius: "12px",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
+  },
+  title: {
+    textAlign: "center",
+    color: "#1e3a8a"
+  },
+  heading: {
+    textAlign: "center",
+    color: "#333",
+    marginBottom: "25px"
+  },
+  input: {
+    width: "100%",
+    padding: "12px",
+    marginBottom: "15px",
+    boxSizing: "border-box",
+    border: "1px solid #ccc",
+    borderRadius: "6px"
+  },
+  button: {
+    width: "100%",
+    padding: "12px",
+    background: "#2563eb",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer"
+  },
+  message: {
+    color: "red",
+    textAlign: "center"
+  },
+  footer: {
+    textAlign: "center",
+    marginTop: "20px"
+  }
 };
 
 export default Register;

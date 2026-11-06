@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 
 function Login() {
@@ -99,6 +99,13 @@ function Login() {
         {message && (
           <p style={styles.message}>{message}</p>
         )}
+
+        <p style={styles.registerText}>
+          New Student?{" "}
+          <Link to="/register" style={styles.registerLink}>
+            Register Here
+          </Link>
+        </p>
       </div>
     </div>
   );
@@ -169,6 +176,18 @@ const styles = {
     textAlign: "center",
     marginTop: "15px",
     color: "#2563eb"
+  },
+
+  registerText: {
+    textAlign: "center",
+    marginTop: "22px",
+    color: "#555"
+  },
+
+  registerLink: {
+    color: "#2563eb",
+    fontWeight: "bold",
+    textDecoration: "none"
   }
 };
 
