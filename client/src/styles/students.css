@@ -1,0 +1,387 @@
+
+.students-page {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 28px;
+  color: #172033;
+  box-sizing: border-box;
+}
+
+.students-page * {
+  box-sizing: border-box;
+}
+
+.students-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.students-eyebrow {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.students-header h1 {
+  font-size: 30px;
+  margin: 8px 0;
+  font-weight: 800;
+}
+
+.students-header p,
+.students-toolbar p {
+  color: #64748b;
+  margin: 0;
+  font-size: 14px;
+}
+
+.add-student-btn,
+.manage-rooms-btn {
+  border: none;
+  border-radius: 9px;
+  padding: 12px 18px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.add-student-btn {
+  background: #059669;
+}
+
+.add-student-btn:hover {
+  background: #047857;
+  transform: translateY(-2px);
+}
+
+.students-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.student-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px;
+  background: white;
+  border: 1px solid #e8edf3;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  font-size: 23px;
+}
+
+.total-icon {
+  background: #e8efff;
+}
+
+.assigned-icon {
+  background: #dcfce7;
+}
+
+.unassigned-icon {
+  background: #fff3dc;
+}
+
+.student-stat-card p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.student-stat-card h2 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.students-content {
+  background: white;
+  border: 1px solid #e8edf3;
+  border-radius: 15px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+}
+
+.students-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.students-toolbar h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.manage-rooms-btn {
+  background: #6d45c5;
+}
+
+.manage-rooms-btn:hover {
+  background: #5936a8;
+}
+
+.students-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 520px;
+  padding: 0 14px;
+  height: 46px;
+  border: 1px solid #dce3ec;
+  border-radius: 9px;
+  margin-bottom: 20px;
+}
+
+.students-search span {
+  font-size: 24px;
+  color: #64748b;
+}
+
+.students-search input {
+  border: none;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  font-size: 13px;
+  background: transparent;
+  color: #172033;
+}
+
+.students-results {
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.students-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e8edf3;
+  border-radius: 10px;
+}
+
+.students-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.students-table th {
+  background: #f7f9fc;
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px 14px;
+  white-space: nowrap;
+}
+
+.students-table td {
+  padding: 15px 14px;
+  border-top: 1px solid #edf0f5;
+  font-size: 13px;
+  color: #475569;
+}
+
+.students-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.student-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.student-name-cell strong {
+  color: #172033;
+}
+
+.student-avatar {
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8efff;
+  color: #3158ad;
+  font-weight: 800;
+}
+
+.student-id {
+  font-weight: 700;
+  color: #334155;
+}
+
+.year-badge,
+.room-badge,
+.unassigned-badge {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.year-badge {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.room-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.unassigned-badge {
+  background: #fff3dc;
+  color: #b45309;
+}
+
+.student-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.edit-student-btn,
+.delete-student-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-student-btn {
+  color: #2563eb;
+  background: #eaf1ff;
+}
+
+.delete-student-btn {
+  color: #dc2626;
+  background: #feecec;
+}
+
+.edit-student-btn:hover {
+  background: #d8e5ff;
+}
+
+.delete-student-btn:hover {
+  background: #fddada;
+}
+
+.students-empty,
+.students-loading {
+  text-align: center;
+  padding: 55px 20px;
+  color: #64748b;
+}
+
+.students-empty > div {
+  font-size: 42px;
+}
+
+.students-empty h3 {
+  color: #172033;
+  margin-bottom: 8px;
+}
+
+.students-empty p {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.students-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: student-spin 0.8s linear infinite;
+}
+
+@keyframes student-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .students-page {
+    padding: 20px;
+  }
+
+  .students-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .students-page {
+    padding: 14px;
+  }
+
+  .students-header,
+  .students-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .students-header h1 {
+    font-size: 24px;
+  }
+
+  .students-header .add-student-btn,
+  .students-toolbar .manage-rooms-btn {
+    width: 100%;
+  }
+
+  .students-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .student-stat-card {
+    padding: 17px;
+  }
+
+  .students-content {
+    padding: 15px;
+  }
+
+  .students-search {
+    max-width: 100%;
+  }
+}

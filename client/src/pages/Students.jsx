@@ -1,15 +1,16 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import "../styles/students.css";
 
 function Students() {
   const navigate = useNavigate();
 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  // Fetch students from MongoDB
   const fetchStudents = async () => {
     try {
       const response = await API.get("/students");
@@ -26,7 +27,6 @@ function Students() {
     fetchStudents();
   }, []);
 
-  // Delete student
   const handleDelete = async (id, name) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${name}?`
@@ -38,9 +38,7 @@ function Students() {
       await API.delete(`/students/${id}`);
 
       setStudents((currentStudents) =>
-        currentStudents.filter(
-          (student) => student._id !== id
-        )
+        currentStudents.filter((student) => student._id !== id)
       );
 
       alert("Student deleted successfully!");
@@ -53,148 +51,229 @@ function Students() {
     }
   };
 
+  const filteredStudents = useMemo(() => {
+    const value = search.trim().toLowerCase();
+
+    if (!value) return students;
+
+    return students.filter((student) =>
+      [
+        student.name,
+        student.studentId,
+        student.email,
+        student.department,
+        student.roomNumber
+      ].some((field) =>
+        String(field || "").toLowerCase().includes(value)
+      )
+    );
+  }, [students, search]);
+
   if (loading) {
     return (
-      <div className="page">
-        <p>Loading students...</p>
+      <div className="students-page">
+        <div className="students-loading">
+          <div className="loading-spinner"></div>
+          <p>Loading student records...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="page">
-      <h1>Student Management</h1>
+    <div className="students-page">
 
-      <p>Total Students: {students.length}</p>
-
-      <button
-        type="button"
-        onClick={() => navigate("/add-student")}
-        style={{
-          backgroundColor: "#059669",
-          color: "white",
-          border: "none",
-          padding: "10px 15px",
-          borderRadius: "5px",
-          cursor: "pointer",
-          marginBottom: "20px"
-        }}
-      >
-        + Add Student
-      </button>
-      <button
-  type="button"
-  onClick={() => navigate("/rooms")}
-  style={{
-    backgroundColor: "#7c3aed",
-    color: "white",
-    border: "none",
-    padding: "10px 15px",
-    borderRadius: "5px",
-    cursor: "pointer",
-    marginRight: "10px"
-  }}
->
-  Manage Rooms
-</button>
-
-      {students.length === 0 ? (
-        <p>No students found. Please add a student first.</p>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              textAlign: "left"
-            }}
-          >
-            <thead>
-              <tr>
-                <th style={{ padding: "10px" }}>Name</th>
-                <th style={{ padding: "10px" }}>Student ID</th>
-                <th style={{ padding: "10px" }}>Email</th>
-                <th style={{ padding: "10px" }}>Department</th>
-                <th style={{ padding: "10px" }}>Year</th>
-                <th style={{ padding: "10px" }}>Room</th>
-                <th style={{ padding: "10px" }}>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {students.map((student) => (
-                <tr key={student._id}>
-                  <td style={{ padding: "10px" }}>
-                    {student.name}
-                  </td>
-
-                  <td style={{ padding: "10px" }}>
-                    {student.studentId}
-                  </td>
-
-                  <td style={{ padding: "10px" }}>
-                    {student.email}
-                  </td>
-
-                  <td style={{ padding: "10px" }}>
-                    {student.department || "-"}
-                  </td>
-
-                  <td style={{ padding: "10px" }}>
-                    {student.year || "-"}
-                  </td>
-
-                  <td style={{ padding: "10px" }}>
-                    {student.roomNumber || "Not assigned"}
-                  </td>
-
-                  <td style={{ padding: "10px" }}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          `/edit-student/${student._id}`
-                        )
-                      }
-                      style={{
-                        backgroundColor: "#2563eb",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 12px",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        marginRight: "8px"
-                      }}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDelete(
-                          student._id,
-                          student.name
-                        )
-                      }
-                      style={{
-                        backgroundColor: "#dc2626",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 12px",
-                        borderRadius: "5px",
-                        cursor: "pointer"
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="students-header">
+        <div>
+          <span className="students-eyebrow">
+            HOSTEL ADMINISTRATION
+          </span>
+          <h1>Student Management</h1>
+          <p>Manage student records, details and room assignments.</p>
         </div>
-      )}
+
+        <button
+          className="add-student-btn"
+          type="button"
+          onClick={() => navigate("/add-student")}
+        >
+          <span>＋</span> Add Student
+        </button>
+      </div>
+
+      <div className="students-stats">
+        <div className="student-stat-card">
+          <div className="stat-icon total-icon">👥</div>
+          <div>
+            <p>Total Students</p>
+            <h2>{students.length}</h2>
+          </div>
+        </div>
+
+        <div className="student-stat-card">
+          <div className="stat-icon assigned-icon">🏠</div>
+          <div>
+            <p>Room Assigned</p>
+            <h2>
+              {students.filter((student) => student.roomNumber).length}
+            </h2>
+          </div>
+        </div>
+
+        <div className="student-stat-card">
+          <div className="stat-icon unassigned-icon">📋</div>
+          <div>
+            <p>Room Not Assigned</p>
+            <h2>
+              {students.filter((student) => !student.roomNumber).length}
+            </h2>
+          </div>
+        </div>
+      </div>
+
+      <div className="students-content">
+
+        <div className="students-toolbar">
+          <div>
+            <h2>All Students</h2>
+            <p>View and manage registered students.</p>
+          </div>
+
+          <button
+            className="manage-rooms-btn"
+            type="button"
+            onClick={() => navigate("/rooms")}
+          >
+            🏠 Manage Rooms
+          </button>
+        </div>
+
+        <div className="students-search">
+          <span>⌕</span>
+          <input
+            type="search"
+            placeholder="Search by name, student ID, email or department..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {filteredStudents.length === 0 ? (
+          <div className="students-empty">
+            <div>👨‍🎓</div>
+            <h3>
+              {students.length === 0
+                ? "No students found"
+                : "No matching students"}
+            </h3>
+            <p>
+              {students.length === 0
+                ? "Start by adding your first student."
+                : "Try searching with a different name or student ID."}
+            </p>
+
+            {students.length === 0 && (
+              <button
+                className="add-student-btn"
+                onClick={() => navigate("/add-student")}
+                type="button"
+              >
+                + Add Student
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="students-results">
+              Showing <strong>{filteredStudents.length}</strong> of{" "}
+              <strong>{students.length}</strong> students
+            </div>
+
+            <div className="students-table-wrapper">
+              <table className="students-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Student ID</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Room</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredStudents.map((student) => (
+                    <tr key={student._id}>
+                      <td>
+                        <div className="student-name-cell">
+                          <div className="student-avatar">
+                            {student.name?.charAt(0)?.toUpperCase() || "S"}
+                          </div>
+                          <strong>{student.name}</strong>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className="student-id">
+                          {student.studentId || "-"}
+                        </span>
+                      </td>
+
+                      <td>{student.email}</td>
+
+                      <td>{student.department || "-"}</td>
+
+                      <td>
+                        <span className="year-badge">
+                          {student.year || "-"}
+                        </span>
+                      </td>
+
+                      <td>
+                        {student.roomNumber ? (
+                          <span className="room-badge">
+                            {student.roomNumber}
+                          </span>
+                        ) : (
+                          <span className="unassigned-badge">
+                            Not assigned
+                          </span>
+                        )}
+                      </td>
+
+                      <td>
+                        <div className="student-actions">
+                          <button
+                            className="edit-student-btn"
+                            type="button"
+                            onClick={() =>
+                              navigate(`/edit-student/${student._id}`)
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="delete-student-btn"
+                            type="button"
+                            onClick={() =>
+                              handleDelete(student._id, student.name)
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

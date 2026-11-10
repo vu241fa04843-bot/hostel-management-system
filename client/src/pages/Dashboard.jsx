@@ -36,7 +36,7 @@ export default function Dashboard() {
     ["Absent Attendance", stats?.absentAttendance ?? 0, "❌"],
     ["Pending Outings", stats?.pendingOutings ?? 0, "🚶"],
     ["Approved Outings", stats?.approvedOutings ?? 0, "✔️"],
-    ["Total Holidays", stats?.totalHolidays ?? 0, "🎉"],
+    ["Total Holidays", stats?.totalHolidays ?? 0, "🎉"]
   ];
 
   const modules = [
@@ -49,78 +49,89 @@ export default function Dashboard() {
     ["Attendance", "/attendance", "📋"],
     ["Outings", "/outings", "🚶"],
     ["Holidays", "/holidays", "🎉"],
-    ["Reports", "/reports", "📊"],
+    ["Reports", "/reports", "📊"]
   ];
 
   return (
-    <div className="dashboard-layout">
-      <aside className="dashboard-sidebar">
-        <h2 className="dashboard-brand">HOSTEL ADMIN</h2>
+    <div className="dashboard-main">
+      <header className="dashboard-topbar">
+        <div>
+          <h1 className="dashboard-title">Admin Dashboard</h1>
+          <p className="dashboard-subtitle">
+            Welcome to your hostel management control center.
+          </p>
+        </div>
 
-        <nav className="dashboard-nav">
-          <Link to="/dashboard">🏠 Dashboard</Link>
+        <button
+          className="dashboard-button"
+          onClick={loadDashboard}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "↻ Refresh"}
+        </button>
+      </header>
+
+      {loading && (
+        <p className="dashboard-loading">Loading dashboard...</p>
+      )}
+
+      {error && (
+        <p className="dashboard-error">{error}</p>
+      )}
+
+      <section className="dashboard-section">
+        <h2>Hostel Overview</h2>
+
+        <div className="dashboard-grid">
+          {cards.map(([title, value, icon]) => (
+            <div className="dashboard-card" key={title}>
+              <div className="dashboard-card-label">
+                <span>{icon}</span> {title}
+              </div>
+              <p className="dashboard-card-value">{value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="dashboard-section">
+        <h2>Management Modules</h2>
+
+        <div className="dashboard-grid">
           {modules.map(([name, path, icon]) => (
-            <Link key={path} to={path}>
-              {icon} {name}
+            <Link
+              className="dashboard-service"
+              to={path}
+              key={path}
+            >
+              <span className="dashboard-service-icon">{icon}</span>
+              <strong>{name}</strong>
+              <span className="service-arrow">→</span>
             </Link>
           ))}
-        </nav>
-      </aside>
+        </div>
+      </section>
 
-      <main className="dashboard-main">
-        <header className="dashboard-topbar">
-          <div>
-            <h1 className="dashboard-title">Admin Dashboard</h1>
-            <p className="dashboard-subtitle">
-              Welcome to your hostel management control center.
-            </p>
-          </div>
+      {stats && (
+        <section className="dashboard-summary">
+          <h2>Hostel Summary</h2>
 
-          <button className="dashboard-button" onClick={loadDashboard}>
-            ↻ Refresh
-          </button>
-        </header>
+          <p>
+            Total attendance records:
+            <strong> {stats.totalAttendance ?? 0}</strong>
+          </p>
 
-        {loading && <p>Loading dashboard...</p>}
-        {error && <p className="dashboard-error">{error}</p>}
+          <p>
+            Total complaints:
+            <strong> {stats.totalComplaints ?? 0}</strong>
+          </p>
 
-        <section className="dashboard-section">
-          <h2>Hostel Overview</h2>
-
-          <div className="dashboard-grid">
-            {cards.map(([title, value, icon]) => (
-              <div className="dashboard-card" key={title}>
-                <div className="dashboard-card-label">
-                  {icon} {title}
-                </div>
-                <p className="dashboard-card-value">{value}</p>
-              </div>
-            ))}
-          </div>
+          <p>
+            Total holidays:
+            <strong> {stats.totalHolidays ?? 0}</strong>
+          </p>
         </section>
-
-        <section className="dashboard-section">
-          <h2>Management Modules</h2>
-
-          <div className="dashboard-grid">
-            {modules.map(([name, path, icon]) => (
-              <Link className="dashboard-service" to={path} key={path}>
-                <span className="dashboard-service-icon">{icon}</span>
-                <strong>{name}</strong>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {stats && (
-          <section className="dashboard-summary">
-            <h2>Hostel Summary</h2>
-            <p>Total attendance records: <strong>{stats.totalAttendance ?? 0}</strong></p>
-            <p>Total complaints: <strong>{stats.totalComplaints ?? 0}</strong></p>
-            <p>Total holidays: <strong>{stats.totalHolidays ?? 0}</strong></p>
-          </section>
-        )}
-      </main>
+      )}
     </div>
   );
 }

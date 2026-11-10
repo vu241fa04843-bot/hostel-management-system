@@ -1,7 +1,8 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
+import "../styles/register.css";
 
 function Register() {
   const navigate = useNavigate();
@@ -13,51 +14,82 @@ function Register() {
     branch: "",
     yearOfStudy: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setMessage("");
+    setSuccess(false);
   };
+
+  const passwordStrength = () => {
+    const password = formData.password;
+
+    if (!password) return 0;
+
+    let score = 0;
+
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    return score;
+  };
+
+  const strength = passwordStrength();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
-
-    if (formData.password !== formData.confirmPassword) {
-      setMessage("Passwords do not match");
-      return;
-    }
+    setSuccess(false);
 
     if (formData.password.length < 8) {
-      setMessage("Password must contain at least 8 characters");
+      setMessage("Password must contain at least 8 characters.");
       return;
     }
 
-    setLoading(true);
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("Passwords do not match.");
+      return;
+    }
 
     try {
+      setLoading(true);
+
       await API.post("/auth/register", {
-        name: formData.name,
-        email: formData.email,
-        registrationNumber: formData.registrationNumber,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        registrationNumber: formData.registrationNumber.trim(),
         branch: formData.branch,
         yearOfStudy: formData.yearOfStudy,
-        password: formData.password
+        password: formData.password,
       });
 
-      alert("Registration successful! Please login.");
-      navigate("/login");
+      setSuccess(true);
+      setMessage("Registration successful! Redirecting to login...");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
 
     } catch (error) {
       setMessage(
-        error.response?.data?.message || "Registration failed"
+        error.response?.data?.message || "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -65,165 +97,271 @@ function Register() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Hostel Management</h1>
-        <h2 style={styles.heading}>Student Registration</h2>
+    <div className="register-page">
 
-        <form onSubmit={handleSubmit}>
-          <input
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+      {/* Left visual section */}
+      <section className="register-visual">
+        <div className="register-brand">
+          <span className="brand-icon">H</span>
+          <span>HOSTELHUB</span>
+        </div>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+        <div className="register-visual-content">
+          <span className="register-tag">
+            JOIN OUR CAMPUS COMMUNITY
+          </span>
 
-          <input
-            name="registrationNumber"
-            placeholder="Registration Number"
-            value={formData.registrationNumber}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+          <h1>
+            Your hostel journey
+            <br />
+            starts here.
+          </h1>
 
-          <select
-            name="branch"
-            value={formData.branch}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          >
-            <option value="">Select Branch</option>
-            <option value="CSE">CSE</option>
-            <option value="ECE">ECE</option>
-            <option value="EEE">EEE</option>
-            <option value="IT">IT</option>
-            <option value="Mechanical">Mechanical</option>
-            <option value="Civil">Civil</option>
-            <option value="Other">Other</option>
-          </select>
+          <p>
+            Create your student account to access hostel
+            services, check fee details, view attendance
+            and manage your daily activities.
+          </p>
 
-          <select
-            name="yearOfStudy"
-            value={formData.yearOfStudy}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          >
-            <option value="">Select Year of Study</option>
-            <option value="1st Year">1st Year</option>
-            <option value="2nd Year">2nd Year</option>
-            <option value="3rd Year">3rd Year</option>
-            <option value="4th Year">4th Year</option>
-          </select>
+          <div className="register-benefits">
+            <div>✓ Access your student dashboard</div>
+            <div>✓ View hostel fee information</div>
+            <div>✓ Submit complaints and outing requests</div>
+            <div>✓ Stay updated with hostel activities</div>
+          </div>
+        </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Create Password (minimum 8 characters)"
-            value={formData.password}
-            onChange={handleChange}
-            minLength={8}
-            required
-            style={styles.input}
-          />
+        <div className="register-visual-footer">
+          HOSTEL MANAGEMENT SYSTEM
+        </div>
+      </section>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+      {/* Registration form */}
+      <section className="register-form-section">
+        <div className="register-card">
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={styles.button}
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
-        </form>
+          <div className="register-mobile-brand">
+            <span className="brand-icon">H</span>
+            HOSTELHUB
+          </div>
 
-        {message && (
-          <p style={styles.message}>{message}</p>
-        )}
+          <div className="register-heading">
+            <span className="register-eyebrow">
+              STUDENT ACCOUNT
+            </span>
 
-        <p style={styles.footer}>
-          Already registered? <Link to="/login">Login Here</Link>
-        </p>
-      </div>
+            <h2>Create your account</h2>
+
+            <p>
+              Enter your details to get started.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+
+            <div className="register-form-grid">
+
+              <div className="register-field">
+                <label htmlFor="name">Full Name</label>
+
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  autoComplete="name"
+                  required
+                />
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="email">Email Address</label>
+
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="registrationNumber">
+                  Registration Number
+                </label>
+
+                <input
+                  id="registrationNumber"
+                  name="registrationNumber"
+                  type="text"
+                  placeholder="Enter registration number"
+                  value={formData.registrationNumber}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="branch">Department / Branch</label>
+
+                <select
+                  id="branch"
+                  name="branch"
+                  value={formData.branch}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Branch</option>
+                  <option value="CSE">CSE</option>
+                  <option value="ECE">ECE</option>
+                  <option value="EEE">EEE</option>
+                  <option value="IT">IT</option>
+                  <option value="Mechanical">Mechanical</option>
+                  <option value="Civil">Civil</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="register-field full-width">
+                <label htmlFor="yearOfStudy">Year of Study</label>
+
+                <select
+                  id="yearOfStudy"
+                  name="yearOfStudy"
+                  value={formData.yearOfStudy}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Year of Study</option>
+                  <option value="1st Year">1st Year</option>
+                  <option value="2nd Year">2nd Year</option>
+                  <option value="3rd Year">3rd Year</option>
+                  <option value="4th Year">4th Year</option>
+                </select>
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="password">Create Password</label>
+
+                <div className="register-password-wrap">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Minimum 8 characters"
+                    value={formData.password}
+                    onChange={handleChange}
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+
+                {formData.password && (
+                  <div className="password-strength">
+                    <div className="strength-track">
+                      <div
+                        className={`strength-fill strength-${strength}`}
+                      />
+                    </div>
+
+                    <small>
+                      Password strength: {
+                        strength <= 2 ? "Weak" :
+                        strength <= 4 ? "Good" : "Strong"
+                      }
+                    </small>
+                  </div>
+                )}
+              </div>
+
+              <div className="register-field">
+                <label htmlFor="confirmPassword">
+                  Confirm Password
+                </label>
+
+                <div className="register-password-wrap">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Re-enter password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    autoComplete="new-password"
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showConfirmPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {message && (
+              <div
+                className={`register-message ${
+                  success ? "register-success" : "register-error"
+                }`}
+                role="alert"
+              >
+                {message}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="register-submit"
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
+              {!loading && <span>→</span>}
+            </button>
+
+          </form>
+
+          <div className="register-login-link">
+            Already have an account?
+            <Link to="/login"> Sign In</Link>
+          </div>
+
+          <div className="register-security">
+            🔐 Your account information is protected.
+          </div>
+
+        </div>
+
+        <footer className="register-page-footer">
+          © {new Date().getFullYear()} HOSTELHUB · Hostel Management System
+        </footer>
+      </section>
+
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "#eef2f7",
-    padding: "20px",
-    fontFamily: "Arial, sans-serif"
-  },
-  card: {
-    width: "380px",
-    maxWidth: "100%",
-    padding: "30px",
-    background: "white",
-    borderRadius: "12px",
-    boxShadow: "0 4px 15px rgba(0,0,0,0.1)"
-  },
-  title: {
-    textAlign: "center",
-    color: "#1e3a8a"
-  },
-  heading: {
-    textAlign: "center",
-    color: "#333",
-    marginBottom: "25px"
-  },
-  input: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "15px",
-    boxSizing: "border-box",
-    border: "1px solid #ccc",
-    borderRadius: "6px"
-  },
-  button: {
-    width: "100%",
-    padding: "12px",
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer"
-  },
-  message: {
-    color: "red",
-    textAlign: "center"
-  },
-  footer: {
-    textAlign: "center",
-    marginTop: "20px"
-  }
-};
 
 export default Register;

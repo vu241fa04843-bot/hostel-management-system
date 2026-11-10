@@ -217,3 +217,199 @@ body {
     font-size: 23px;
   }
 }
+/* GLOBAL RESPONSIVE IMPROVEMENTS */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+table {
+  width: 100%;
+  min-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    display: block;
+  }
+
+  .dashboard-main {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .dashboard-topbar {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-intro {
+    padding: 25px 20px;
+  }
+
+  .auth-panel {
+    padding: 20px;
+  }
+
+  .auth-card {
+    width: 100%;
+    padding: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-main {
+    padding: 12px;
+  }
+
+  .dashboard-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-top-actions {
+    flex-wrap: wrap;
+  }
+
+  .auth-intro h1 {
+    font-size: 28px;
+  }
+}
+
+/* RESPONSIVE ADMIN SIDEBAR */
+
+.dashboard-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-heading-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mobile-menu-button,
+.sidebar-close {
+  display: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  background: transparent;
+  color: inherit;
+}
+
+.dashboard-overlay {
+  display: none;
+}
+
+.service-arrow {
+  margin-left: auto;
+  font-size: 20px;
+}
+
+/* Tablet and mobile */
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(280px, 85vw);
+    height: 100dvh;
+    z-index: 1001;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    transition: transform 0.3s ease;
+    visibility: hidden;
+  }
+
+  .dashboard-sidebar.sidebar-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+  }
+
+  .sidebar-close {
+    display: block;
+    padding: 8px;
+  }
+
+  .dashboard-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+  }
+
+  .dashboard-main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-topbar {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-heading-group {
+    gap: 8px;
+  }
+
+  .dashboard-title {
+    font-size: 22px;
+  }
+
+  .dashboard-subtitle {
+    font-size: 13px;
+  }
+
+  .dashboard-button {
+    padding: 9px 12px;
+  }
+}

@@ -23,59 +23,54 @@ function StudentDashboard() {
   ];
 
   return (
-    <div className="dashboard-layout">
-      <aside className="dashboard-sidebar">
-        <h2 className="dashboard-brand">HOSTEL STUDENT</h2>
+    <main className="student-dashboard-content">
 
-        <nav className="dashboard-nav">
-          <Link to="/student-dashboard">🏠 Dashboard</Link>
+      <header className="student-dashboard-header">
+        <div>
+          <h1>Student Dashboard</h1>
+          <p>
+            Welcome, {user?.name || "Student"}!
+          </p>
+        </div>
+
+        <button
+          className="dashboard-button danger"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </header>
+
+      <section className="student-welcome-card">
+        <h2>Welcome to Your Hostel Portal 👋</h2>
+
+        <p>
+          View your hostel services, check your information,
+          and manage your requests from one place.
+        </p>
+      </section>
+
+      <section className="student-services-section">
+        <h2>Student Services</h2>
+
+        <div className="student-services-grid">
           {services.map(([name, path, icon]) => (
-            <Link to={path} key={path}>
-              {icon} {name}
+            <Link
+              className="student-service-card"
+              to={path}
+              key={path}
+            >
+              <span className="student-service-icon">
+                {icon}
+              </span>
+
+              <strong>{name}</strong>
             </Link>
           ))}
-        </nav>
-      </aside>
+        </div>
+      </section>
 
-      <main className="dashboard-main">
-        <header className="dashboard-topbar">
-          <div>
-            <h1 className="dashboard-title">Student Dashboard</h1>
-            <p className="dashboard-subtitle">
-              Welcome, {user?.name || "Student"}!
-            </p>
-          </div>
-
-          <button
-            className="dashboard-button danger"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </header>
-
-        <section className="dashboard-card">
-          <h2>Welcome to Your Hostel Portal 👋</h2>
-          <p className="dashboard-subtitle">
-            View your hostel services, check your information, and manage
-            your requests from one place.
-          </p>
-        </section>
-
-        <section className="dashboard-section">
-          <h2>Student Services</h2>
-
-          <div className="dashboard-grid">
-            {services.map(([name, path, icon]) => (
-              <Link className="dashboard-service" to={path} key={path}>
-                <span className="dashboard-service-icon">{icon}</span>
-                <strong>{name}</strong>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </main>
-    </div>
+    </main>
   );
 }
 
