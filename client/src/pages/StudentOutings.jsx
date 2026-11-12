@@ -93,51 +93,16 @@ function StudentOutings() {
     }
   };
 
-  const getStatusStyle = (status) => {
-    if (status === "Approved") {
-      return {
-        color: "#34d399",
-        background: "rgba(52, 211, 153, 0.12)"
-      };
-    }
-
-    if (status === "Rejected") {
-      return {
-        color: "#fb7185",
-        background: "rgba(251, 113, 133, 0.12)"
-      };
-    }
-
-    return {
-      color: "#fbbf24",
-      background: "rgba(251, 191, 36, 0.12)"
-    };
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "12px",
-    marginTop: "8px",
-    marginBottom: "18px",
-    boxSizing: "border-box",
-    border: "1px solid #334155",
-    borderRadius: "8px",
-    background: "#0f172a",
-    color: "#e5e7eb",
-    fontSize: "14px",
-    outline: "none"
-  };
-
-  const labelStyle = {
-    color: "#cbd5e1",
-    fontWeight: "600",
-    fontSize: "14px"
+  const getStatusClass = (status) => {
+    if (status === "Approved") return "outing-approved";
+    if (status === "Rejected") return "outing-rejected";
+    return "outing-pending";
   };
 
   if (loading) {
     return (
-      <div className="dashboard-main">
-        <p style={{ color: "#cbd5e1" }}>
+      <div className="student-outings-page">
+        <p className="outing-loading">
           Loading outing requests...
         </p>
       </div>
@@ -145,198 +110,170 @@ function StudentOutings() {
   }
 
   return (
-    <div className="dashboard-main">
-      <div style={{ marginBottom: "25px" }}>
-        <Link
-          to="/student-dashboard"
-          style={{
-            color: "#38bdf8",
-            textDecoration: "none",
-            fontSize: "14px"
-          }}
-        >
-          ← Back to Student Dashboard
-        </Link>
+    <div className="student-outings-page">
+      <Link
+        to="/student-dashboard"
+        className="outing-back-link"
+      >
+        ← Back to Student Dashboard
+      </Link>
 
-        <h1 className="dashboard-title" style={{ marginTop: "18px" }}>
-          My Outing Requests
-        </h1>
-
-        <p className="dashboard-subtitle">
+      <div className="outing-page-header">
+        <h1>My Outing Requests</h1>
+        <p>
           Submit outing requests and track Admin approval.
         </p>
       </div>
 
       {message && (
-        <div
-          style={{
-            padding: "12px",
-            marginBottom: "18px",
-            borderRadius: "8px",
-            color: "#34d399",
-            background: "rgba(52, 211, 153, 0.12)"
-          }}
-        >
+        <div className="outing-message outing-success">
           {message}
         </div>
       )}
 
       {error && (
-        <div
-          style={{
-            padding: "12px",
-            marginBottom: "18px",
-            borderRadius: "8px",
-            color: "#fb7185",
-            background: "rgba(251, 113, 133, 0.12)"
-          }}
-        >
+        <div className="outing-message outing-error">
           {error}
         </div>
       )}
 
-      <div
-        className="dashboard-card"
-        style={{
-          maxWidth: "650px",
-          marginBottom: "30px"
-        }}
-      >
-        <h2 style={{ color: "#e5e7eb", marginTop: 0 }}>
-          New Outing Request
-        </h2>
+      <section className="outing-form-card">
+        <h2>New Outing Request</h2>
 
         <form onSubmit={handleSubmit}>
-          <label style={labelStyle}>Destination</label>
+          <div className="outing-form-group">
+            <label htmlFor="destination">Destination</label>
+            <input
+              id="destination"
+              type="text"
+              name="destination"
+              value={form.destination}
+              onChange={handleChange}
+              placeholder="Enter destination"
+              required
+            />
+          </div>
 
-          <input
-            type="text"
-            name="destination"
-            value={form.destination}
-            onChange={handleChange}
-            placeholder="Enter destination"
-            required
-            style={inputStyle}
-          />
+          <div className="outing-form-group">
+            <label htmlFor="purpose">Purpose</label>
+            <textarea
+              id="purpose"
+              name="purpose"
+              value={form.purpose}
+              onChange={handleChange}
+              placeholder="Enter outing purpose"
+              rows="4"
+              required
+            />
+          </div>
 
-          <label style={labelStyle}>Purpose</label>
+          <div className="outing-date-grid">
+            <div className="outing-form-group">
+              <label htmlFor="outingDate">
+                Outing Date and Time
+              </label>
+              <input
+                id="outingDate"
+                type="datetime-local"
+                name="outingDate"
+                value={form.outingDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <textarea
-            name="purpose"
-            value={form.purpose}
-            onChange={handleChange}
-            placeholder="Enter outing purpose"
-            required
-            rows="4"
-            style={{
-              ...inputStyle,
-              resize: "vertical"
-            }}
-          />
-
-          <label style={labelStyle}>
-            Outing Date and Time
-          </label>
-
-          <input
-            type="datetime-local"
-            name="outingDate"
-            value={form.outingDate}
-            onChange={handleChange}
-            required
-            style={inputStyle}
-          />
-
-          <label style={labelStyle}>
-            Return Date and Time
-          </label>
-
-          <input
-            type="datetime-local"
-            name="returnDate"
-            value={form.returnDate}
-            onChange={handleChange}
-            required
-            style={inputStyle}
-          />
+            <div className="outing-form-group">
+              <label htmlFor="returnDate">
+                Return Date and Time
+              </label>
+              <input
+                id="returnDate"
+                type="datetime-local"
+                name="returnDate"
+                value={form.returnDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
           <button
             type="submit"
+            className="outing-submit-button"
             disabled={submitting}
-            className="dashboard-button"
-            style={{
-              opacity: submitting ? 0.7 : 1,
-              cursor: submitting ? "not-allowed" : "pointer"
-            }}
           >
-            {submitting ? "Submitting..." : "Submit Outing Request"}
+            {submitting
+              ? "Submitting..."
+              : "Submit Outing Request"}
           </button>
         </form>
-      </div>
+      </section>
 
-      <div className="dashboard-section">
-        <h2 style={{ color: "#e5e7eb" }}>
-          My Outing History
-        </h2>
+      <section className="outing-history-section">
+        <div className="outing-section-heading">
+          <h2>My Outing History</h2>
+          <span>{outings.length} Requests</span>
+        </div>
 
         {outings.length === 0 ? (
-          <div className="dashboard-card">
-            <p style={{ color: "#94a3b8" }}>
-              No outing requests submitted yet.
+          <div className="outing-empty-card">
+            <h3>No outing requests yet</h3>
+            <p>
+              Your submitted outing requests will appear here.
             </p>
           </div>
         ) : (
-          <div className="dashboard-grid">
+          <div className="outing-history-grid">
             {outings.map((outing) => (
-              <div
+              <article
                 key={outing._id}
-                className="dashboard-card"
-                style={{
-                  borderLeft: "4px solid #38bdf8"
-                }}
+                className="outing-history-card"
               >
-                <h3 style={{ color: "#e5e7eb", marginTop: 0 }}>
-                  {outing.destination}
-                </h3>
-
-                <p style={{ color: "#cbd5e1" }}>
-                  <strong>Purpose:</strong> {outing.purpose}
-                </p>
-
-                <p style={{ color: "#cbd5e1" }}>
-                  <strong>Outing Date:</strong>{" "}
-                  {new Date(outing.outingDate).toLocaleString()}
-                </p>
-
-                <p style={{ color: "#cbd5e1" }}>
-                  <strong>Return Date:</strong>{" "}
-                  {new Date(outing.returnDate).toLocaleString()}
-                </p>
-
-                <p style={{ color: "#cbd5e1" }}>
-                  <strong>Status:</strong>{" "}
+                <div className="outing-card-heading">
+                  <h3>{outing.destination}</h3>
                   <span
-                    style={{
-                      ...getStatusStyle(outing.status),
-                      padding: "5px 10px",
-                      borderRadius: "20px",
-                      fontWeight: "600",
-                      fontSize: "13px"
-                    }}
+                    className={`outing-status ${getStatusClass(
+                      outing.status
+                    )}`}
                   >
                     {outing.status}
                   </span>
-                </p>
+                </div>
 
-                <p style={{ color: "#cbd5e1" }}>
-                  <strong>Admin Remarks:</strong>{" "}
-                  {outing.remarks || "No remarks yet"}
-                </p>
-              </div>
+                <div className="outing-detail">
+                  <strong>Purpose</strong>
+                  <p>{outing.purpose}</p>
+                </div>
+
+                <div className="outing-detail">
+                  <strong>Outing Date</strong>
+                  <p>
+                    {new Date(
+                      outing.outingDate
+                    ).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="outing-detail">
+                  <strong>Return Date</strong>
+                  <p>
+                    {new Date(
+                      outing.returnDate
+                    ).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="outing-remarks">
+                  <strong>Admin Remarks</strong>
+                  <p>
+                    {outing.remarks || "No remarks yet"}
+                  </p>
+                </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

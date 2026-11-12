@@ -1,105 +1,137 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import API from "../services/api";
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+const initialForm = {
+  student: "",
+  date: today(),
+  status: "Present",
+  remarks: "",
+};
+
+const attendanceStatuses = ["Present", "Absent", "Leave"];
+
+function formatDate(date) {
+  return date ? new Date(date).toLocaleDateString() : "—";
+}
 
 export default function Attendance() {
   const [students, setStudents] = useState([]);
   const [records, setRecords] = useState([]);
+  const [form, setForm] = useState(initialForm);
 
-  const [form, setForm] = useState({
-    student: "",
-    date: new Date().toISOString().slice(0, 10),
-    status: "Present",
-    remarks: "",
-  });
+  const [editingId, setEditingId] = useState(null);
+  const [editingStatus, setEditingStatus] = useState("Present");
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const loadData = async () => {
-    try {
-      const [studentResponse, attendanceResponse] =
-        await Promise.all([
-          API.get("/students"),
-          API.get("/attendance"),
-        ]);
+  const loadData = useCallback(async () => {
+    setLoading(true);
 
-      setStudents(studentResponse.data);
-      setRecords(attendanceResponse.data);
+    try {
+      const [studentResponse, attendanceResponse] = await Promise.all([
+        API.get("/students"),
+        API.get("/attendance"),
+      ]);
+
+      setStudents(
+        Array.isArray(studentResponse.data) ? studentResponse.data : []
+      );
+
+      setRecords(
+        Array.isArray(attendanceResponse.data)
+          ? attendanceResponse.data
+          : []
+      );
+
       setError("");
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to load attendance data."
       );
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
+    setForm((previous) => ({
+      ...previous,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setError("");
+    setMessage("");
+
+    setSaving(true);
+
     try {
       await API.post("/attendance", form);
 
       setMessage("Attendance added successfully!");
-      setError("");
 
       setForm({
-        student: "",
-        date: new Date().toISOString().slice(0, 10),
-        status: "Present",
-        remarks: "",
+        ...initialForm,
+        date: today(),
       });
 
-      loadData();
+      await loadData();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to add attendance."
       );
-      setMessage("");
+    } finally {
+      setSaving(false);
     }
   };
 
+  const startEditing = (record) => {
+    setEditingId(record._id);
+    setEditingStatus(record.status);
+    setError("");
+    setMessage("");
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditingStatus("Present");
+  };
+
   const updateStatus = async (record) => {
-    const newStatus = window.prompt(
-      "Enter Present, Absent or Leave:",
-      record.status
-    );
-
-    if (!newStatus) return;
-
-    const status = newStatus.trim();
-
-    if (!["Present", "Absent", "Leave"].includes(status)) {
-      setError("Please enter a valid attendance status.");
-      return;
-    }
+    setError("");
+    setMessage("");
+    setSaving(true);
 
     try {
       await API.patch(`/attendance/${record._id}`, {
-        status,
+        status: editingStatus,
         remarks: record.remarks || "",
       });
 
       setMessage("Attendance updated successfully!");
-      setError("");
-      loadData();
+      cancelEditing();
+      await loadData();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to update attendance."
       );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -108,12 +140,14 @@ export default function Attendance() {
       return;
     }
 
+    setError("");
+    setMessage("");
+
     try {
       await API.delete(`/attendance/${id}`);
 
       setMessage("Attendance deleted successfully!");
-      setError("");
-      loadData();
+      await loadData();
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -135,246 +169,307 @@ export default function Attendance() {
   ).length;
 
   return (
-    <div style={styles.container}>
-      <h1>Attendance Management</h1>
+    <main className="attendance-page">
+      <header className="attendance-header">
+        <div>
+          <span className="attendance-eyebrow">ADMINISTRATION</span>
+          <h1>Attendance Management</h1>
+          <p>
+            Manage and monitor hostel student attendance records.
+          </p>
+        </div>
 
-      <p>Manage and monitor hostel student attendance.</p>
+        <button
+          type="button"
+          className="attendance-refresh"
+          onClick={loadData}
+          disabled={loading}
+        >
+          {loading ? "Refreshing..." : "↻ Refresh"}
+        </button>
+      </header>
 
       {message && (
-        <p style={{ color: "green" }}>{message}</p>
+        <div className="attendance-alert attendance-success" role="status">
+          {message}
+        </div>
       )}
 
       {error && (
-        <p style={{ color: "red" }}>{error}</p>
+        <div className="attendance-alert attendance-error" role="alert">
+          {error}
+        </div>
       )}
 
-      <div style={styles.cards}>
-        <div style={styles.card}>
-          <h3>Total Records</h3>
-          <h2>{records.length}</h2>
-        </div>
+      <section className="attendance-summary-grid">
+        <SummaryCard
+          icon="📋"
+          label="Total Records"
+          value={records.length}
+          description="All attendance entries"
+        />
 
-        <div style={styles.card}>
-          <h3>Present</h3>
-          <h2>{presentCount}</h2>
-        </div>
+        <SummaryCard
+          icon="✅"
+          label="Present"
+          value={presentCount}
+          description="Present records"
+        />
 
-        <div style={styles.card}>
-          <h3>Absent</h3>
-          <h2>{absentCount}</h2>
-        </div>
+        <SummaryCard
+          icon="❌"
+          label="Absent"
+          value={absentCount}
+          description="Absent records"
+        />
 
-        <div style={styles.card}>
-          <h3>Leave</h3>
-          <h2>{leaveCount}</h2>
-        </div>
-      </div>
+        <SummaryCard
+          icon="🗓️"
+          label="Leave"
+          value={leaveCount}
+          description="Leave records"
+        />
+      </section>
 
-      <div style={styles.formContainer}>
-        <h2>Mark Student Attendance</h2>
+      <section className="attendance-panel">
+        <div className="attendance-section-heading">
+          <div>
+            <h2>Mark Student Attendance</h2>
+            <p>Enter the student's details and attendance status.</p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <label>Student</label>
-
-          <select
-            name="student"
-            value={form.student}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          >
-            <option value="">Select Student</option>
-
-            {students.map((student) => (
-              <option
-                key={student._id}
-                value={student._id}
+          <div className="attendance-form-grid">
+            <Field label="Student">
+              <select
+                name="student"
+                value={form.student}
+                onChange={handleChange}
+                required
               >
-                {student.name} ({student.studentId})
-              </option>
-            ))}
-          </select>
+                <option value="">Select Student</option>
 
-          <label>Date</label>
+                {students.map((student) => (
+                  <option key={student._id} value={student._id}>
+                    {student.name} ({student.studentId || student._id})
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-          <input
-            type="date"
-            name="date"
-            value={form.date}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+            <Field label="Date">
+              <input
+                type="date"
+                name="date"
+                value={form.date}
+                onChange={handleChange}
+                required
+              />
+            </Field>
 
-          <label>Attendance Status</label>
+            <Field label="Attendance Status">
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                required
+              >
+                {attendanceStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            style={styles.input}
-          >
-            <option value="Present">Present</option>
-            <option value="Absent">Absent</option>
-            <option value="Leave">Leave</option>
-          </select>
+            <Field label="Remarks">
+              <input
+                type="text"
+                name="remarks"
+                value={form.remarks}
+                onChange={handleChange}
+                placeholder="Enter remarks (optional)"
+              />
+            </Field>
+          </div>
 
-          <label>Remarks</label>
+          <div className="attendance-form-actions">
+            <button
+              type="submit"
+              className="attendance-primary-button"
+              disabled={saving || students.length === 0}
+            >
+              {saving ? "Saving..." : "Mark Attendance"}
+            </button>
+          </div>
 
-          <input
-            type="text"
-            name="remarks"
-            value={form.remarks}
-            onChange={handleChange}
-            placeholder="Enter remarks"
-            style={styles.input}
-          />
-
-          <button type="submit" style={styles.button}>
-            Mark Attendance
-          </button>
+          {students.length === 0 && !loading && (
+            <p className="attendance-help-text">
+              Add a student in Student Management before marking attendance.
+            </p>
+          )}
         </form>
-      </div>
+      </section>
 
-      <div style={styles.tableContainer}>
-        <h2>Attendance Records</h2>
+      <section className="attendance-panel attendance-records-panel">
+        <div className="attendance-section-heading">
+          <div>
+            <h2>Attendance Records</h2>
+            <p>View, update, and delete student attendance entries.</p>
+          </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Student ID</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Remarks</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+          <span className="attendance-count">
+            {records.length} records
+          </span>
+        </div>
 
-            <tbody>
-              {records.length === 0 ? (
+        {loading ? (
+          <div className="attendance-loading">
+            Loading attendance records...
+          </div>
+        ) : (
+          <div className="attendance-table-wrap">
+            <table className="attendance-table">
+              <thead>
                 <tr>
-                  <td colSpan="6">
-                    No attendance records found.
-                  </td>
+                  <th>Student</th>
+                  <th>Student ID</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Remarks</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                records.map((record) => (
-                  <tr key={record._id}>
-                    <td>
-                      {record.student?.name || "Unknown"}
-                    </td>
+              </thead>
 
-                    <td>
-                      {record.student?.studentId || "-"}
-                    </td>
-
-                    <td>
-                      {new Date(record.date).toLocaleDateString()}
-                    </td>
-
-                    <td>{record.status}</td>
-
-                    <td>{record.remarks || "-"}</td>
-
-                    <td>
-                      <button
-                        onClick={() => updateStatus(record)}
-                        style={styles.editButton}
-                      >
-                        Update
-                      </button>
-
-                      <button
-                        onClick={() => deleteRecord(record._id)}
-                        style={styles.deleteButton}
-                      >
-                        Delete
-                      </button>
+              <tbody>
+                {records.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="attendance-empty">
+                      No attendance records found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                ) : (
+                  records.map((record) => (
+                    <tr key={record._id}>
+                      <td>
+                        {record.student?.name || "Unknown"}
+                      </td>
+
+                      <td>
+                        {record.student?.studentId || "—"}
+                      </td>
+
+                      <td>{formatDate(record.date)}</td>
+
+                      <td>
+                        {editingId === record._id ? (
+                          <select
+                            className="attendance-status-select"
+                            value={editingStatus}
+                            onChange={(e) =>
+                              setEditingStatus(e.target.value)
+                            }
+                          >
+                            {attendanceStatuses.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <StatusBadge status={record.status} />
+                        )}
+                      </td>
+
+                      <td>{record.remarks || "—"}</td>
+
+                      <td>
+                        {editingId === record._id ? (
+                          <div className="attendance-row-actions">
+                            <button
+                              type="button"
+                              className="attendance-save-button"
+                              disabled={saving}
+                              onClick={() => updateStatus(record)}
+                            >
+                              Save
+                            </button>
+
+                            <button
+                              type="button"
+                              className="attendance-cancel-button"
+                              onClick={cancelEditing}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="attendance-row-actions">
+                            <button
+                              type="button"
+                              className="attendance-edit-button"
+                              onClick={() => startEditing(record)}
+                            >
+                              Update
+                            </button>
+
+                            <button
+                              type="button"
+                              className="attendance-delete-button"
+                              onClick={() => deleteRecord(record._id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </main>
   );
 }
 
-const styles = {
-  container: {
-    padding: "25px",
-    fontFamily: "Arial, sans-serif",
-  },
+function SummaryCard({ icon, label, value, description }) {
+  return (
+    <article className="attendance-summary-card">
+      <div className="attendance-summary-top">
+        <span className="attendance-summary-icon">{icon}</span>
+        <span className="attendance-summary-label">{label}</span>
+      </div>
 
-  cards: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-    gap: "15px",
-    margin: "20px 0",
-  },
+      <h2>{value}</h2>
+      <p>{description}</p>
+    </article>
+  );
+}
 
-  card: {
-    background: "#eaf2ff",
-    padding: "15px",
-    borderRadius: "10px",
-    textAlign: "center",
-  },
+function Field({ label, children }) {
+  return (
+    <label className="attendance-field">
+      <span>{label}</span>
+      {children}
+    </label>
+  );
+}
 
-  formContainer: {
-    background: "#ffffff",
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    maxWidth: "550px",
-    marginBottom: "30px",
-  },
+function StatusBadge({ status }) {
+  const className =
+    status === "Present"
+      ? "present"
+      : status === "Absent"
+        ? "absent"
+        : "leave";
 
-  input: {
-    display: "block",
-    width: "100%",
-    padding: "10px",
-    margin: "8px 0 16px",
-    boxSizing: "border-box",
-  },
-
-  button: {
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    padding: "12px 20px",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-
-  tableContainer: {
-    marginTop: "25px",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    textAlign: "left",
-  },
-
-  editButton: {
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    padding: "7px 10px",
-    margin: "3px",
-    cursor: "pointer",
-  },
-
-  deleteButton: {
-    background: "#dc2626",
-    color: "white",
-    border: "none",
-    padding: "7px 10px",
-    margin: "3px",
-    cursor: "pointer",
-  },
-};
+  return (
+    <span className={`attendance-status-badge ${className}`}>
+      {status}
+    </span>
+  );
+}

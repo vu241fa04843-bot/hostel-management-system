@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import API from "../services/api";
 
@@ -6,32 +7,7 @@ export default function Reports() {
   const [records, setRecords] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  const loadReport = async () => {
-    try {
-      const response = await API.get(
-        `/reports/${reportType}`
-      );
-
-      setRecords(response.data);
-      setMessage("Report loaded successfully!");
-      setError("");
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Unable to load report."
-      );
-      setMessage("");
-    }
-  };
-
-  const getStudentName = (record) => {
-    if (record.student && typeof record.student === "object") {
-      return record.student.name || "Unknown";
-    }
-
-    return record.name || "Unknown";
-  };
+  const [loading, setLoading] = useState(false);
 
   const getColumns = () => {
     const columns = {
@@ -68,7 +44,41 @@ export default function Reports() {
       ],
     };
 
-    return columns[reportType];
+    return columns[reportType] || [];
+  };
+
+  const loadReport = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+      setError("");
+
+      const response = await API.get(
+        `/reports/${reportType}`
+      );
+
+      setRecords(response.data);
+      setMessage("Report loaded successfully!");
+    } catch (err) {
+      setRecords([]);
+      setError(
+        err.response?.data?.message ||
+          "Unable to load report."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStudentName = (record) => {
+    if (
+      record.student &&
+      typeof record.student === "object"
+    ) {
+      return record.student.name || "Unknown";
+    }
+
+    return record.name || "Unknown";
   };
 
   const getValue = (record, column) => {
@@ -78,16 +88,23 @@ export default function Reports() {
 
     const value = record[column];
 
-    if (value === null || value === undefined) {
+    if (value === null || value === undefined || value === "") {
       return "-";
     }
 
     if (
-      ["date", "createdAt", "outingDate", "returnDate"].includes(
-        column
-      )
+      [
+        "date",
+        "createdAt",
+        "outingDate",
+        "returnDate",
+      ].includes(column)
     ) {
-      return new Date(value).toLocaleString();
+      const parsedDate = new Date(value);
+
+      return Number.isNaN(parsedDate.getTime())
+        ? "-"
+        : parsedDate.toLocaleString();
     }
 
     if (typeof value === "object") {
@@ -97,9 +114,16 @@ export default function Reports() {
     return String(value);
   };
 
+  const formatColumnName = (column) => {
+    return column
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (letter) => letter.toUpperCase());
+  };
+
   const downloadCSV = () => {
     if (!records.length) {
       setError("Load a report before downloading.");
+      setMessage("");
       return;
     }
 
@@ -122,6 +146,7 @@ export default function Reports() {
     ];
 
     const csvContent = "\uFEFF" + rows.join("\n");
+
     const blob = new Blob([csvContent], {
       type: "text/csv;charset=utf-8;",
     });
@@ -137,140 +162,150 @@ export default function Reports() {
     link.remove();
 
     URL.revokeObjectURL(url);
+
+    setMessage("CSV report downloaded successfully!");
+    setError("");
+  };
+
+  const handleReportChange = (e) => {
+    setReportType(e.target.value);
+    setRecords([]);
+    setMessage("");
+    setError("");
   };
 
   return (
-    <div style={styles.container}>
-      <h1>Reports Management</h1>
-
-      <p>View and download hostel management reports.</p>
-
-      <div style={styles.form}>
-        <label>Select Report Type</label>
-
-        <select
-          value={reportType}
-          onChange={(e) => {
-            setReportType(e.target.value);
-            setRecords([]);
-            setMessage("");
-            setError("");
-          }}
-          style={styles.input}
-        >
-          <option value="students">Student Report</option>
-          <option value="fees">Fee Report</option>
-          <option value="attendance">Attendance Report</option>
-          <option value="complaints">Complaint Report</option>
-          <option value="outings">Outing Report</option>
-        </select>
-
-        <button
-          onClick={loadReport}
-          style={styles.loadButton}
-        >
-          Generate Report
-        </button>
-
-        <button
-          onClick={downloadCSV}
-          style={styles.downloadButton}
-        >
-          Download CSV
-        </button>
+    <div className="reports-page">
+      <div className="reports-header">
+        <div>
+          <h1>Reports Management</h1>
+          <p>
+            View and download hostel management reports.
+          </p>
+        </div>
       </div>
 
       {message && (
-        <p style={{ color: "green" }}>{message}</p>
+        <div className="reports-alert success">
+          {message}
+        </div>
       )}
 
       {error && (
-        <p style={{ color: "red" }}>{error}</p>
+        <div className="reports-alert error">
+          {error}
+        </div>
       )}
 
-      <h2>Report Results</h2>
+      <section className="reports-filter-section">
+        <div className="reports-section-heading">
+          <h2>Generate Report</h2>
+          <p>Select a report type to view its records.</p>
+        </div>
 
-      <p>Total Records: {records.length}</p>
+        <div className="reports-controls">
+          <div className="reports-field">
+            <label htmlFor="report-type">
+              Select Report Type
+            </label>
 
-      <div style={{ overflowX: "auto" }}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              {records.length > 0 &&
-                getColumns().map((column) => (
-                  <th key={column}>
-                    {column.toUpperCase()}
-                  </th>
-                ))}
-            </tr>
-          </thead>
+            <select
+              id="report-type"
+              value={reportType}
+              onChange={handleReportChange}
+            >
+              <option value="students">Student Report</option>
+              <option value="fees">Fee Report</option>
+              <option value="attendance">
+                Attendance Report
+              </option>
+              <option value="complaints">
+                Complaint Report
+              </option>
+              <option value="outings">Outing Report</option>
+            </select>
+          </div>
 
-          <tbody>
-            {records.map((record) => (
-              <tr key={record._id}>
-                {getColumns().map((column) => (
-                  <td key={column}>
-                    {getValue(record, column)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+          <div className="reports-buttons">
+            <button
+              type="button"
+              className="reports-generate"
+              onClick={loadReport}
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Generate Report"}
+            </button>
 
-            {records.length === 0 && (
-              <tr>
-                <td>
-                  No records to display. Generate a report.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            <button
+              type="button"
+              className="reports-download"
+              onClick={downloadCSV}
+              disabled={loading || records.length === 0}
+            >
+              Download CSV
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="reports-results-section">
+        <div className="reports-results-header">
+          <div>
+            <h2>Report Results</h2>
+            <p>
+              Showing {reportType} report records.
+            </p>
+          </div>
+
+          <div className="reports-total">
+            <span>Total Records</span>
+            <strong>{records.length}</strong>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="reports-empty">
+            Generating report...
+          </div>
+        ) : (
+          <div className="reports-table-wrapper">
+            <table className="reports-table">
+              <thead>
+                <tr>
+                  {getColumns().map((column) => (
+                    <th key={column}>
+                      {formatColumnName(column)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {records.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={getColumns().length || 1}
+                      className="reports-empty"
+                    >
+                      No records to display. Generate a report.
+                    </td>
+                  </tr>
+                ) : (
+                  records.map((record, index) => (
+                    <tr key={record._id || index}>
+                      {getColumns().map((column) => (
+                        <td key={column}>
+                          {getValue(record, column)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: "25px",
-    fontFamily: "Arial, sans-serif",
-  },
-
-  form: {
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    maxWidth: "550px",
-    marginBottom: "25px",
-  },
-
-  input: {
-    display: "block",
-    width: "100%",
-    padding: "10px",
-    margin: "10px 0 15px",
-  },
-
-  loadButton: {
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    padding: "10px 18px",
-    marginRight: "10px",
-    cursor: "pointer",
-  },
-
-  downloadButton: {
-    background: "#16a34a",
-    color: "white",
-    border: "none",
-    padding: "10px 18px",
-    cursor: "pointer",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    textAlign: "left",
-  },
-};

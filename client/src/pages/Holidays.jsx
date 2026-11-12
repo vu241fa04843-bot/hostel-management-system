@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
@@ -6,17 +7,25 @@ export default function Holidays() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     name: "",
     date: "",
     description: "",
     category: "Other",
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
 
   const loadHolidays = async () => {
     try {
+      setLoading(true);
+
       const response = await API.get("/holidays");
+
       setHolidays(response.data);
       setError("");
     } catch (err) {
@@ -24,6 +33,8 @@ export default function Holidays() {
         err.response?.data?.message ||
           "Unable to load holidays."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,27 +43,28 @@ export default function Holidays() {
   }, []);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
   const resetForm = () => {
-    setForm({
-      name: "",
-      date: "",
-      description: "",
-      category: "Other",
-    });
-
+    setForm(emptyForm);
     setEditingId(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setMessage("");
+    setError("");
+
     try {
+      setSaving(true);
+
       if (editingId) {
         await API.patch(`/holidays/${editingId}`, form);
         setMessage("Holiday updated successfully!");
@@ -61,15 +73,15 @@ export default function Holidays() {
         setMessage("Holiday added successfully!");
       }
 
-      setError("");
       resetForm();
-      loadHolidays();
+      await loadHolidays();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to save holiday."
       );
-      setMessage("");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -85,6 +97,9 @@ export default function Holidays() {
       category: holiday.category || "Other",
     });
 
+    setMessage("");
+    setError("");
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -97,223 +112,275 @@ export default function Holidays() {
     }
 
     try {
+      setDeletingId(id);
+      setMessage("");
+      setError("");
+
       await API.delete(`/holidays/${id}`);
 
       setMessage("Holiday deleted successfully!");
-      setError("");
 
       if (editingId === id) {
         resetForm();
       }
 
-      loadHolidays();
+      await loadHolidays();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to delete holiday."
       );
+    } finally {
+      setDeletingId("");
     }
   };
 
-  return (
-    <div style={styles.container}>
-      <h1>Holiday Management</h1>
+  const categoryClass = (category) => {
+    return `holiday-category ${(
+      category || "Other"
+    ).toLowerCase()}`;
+  };
 
-      <p>Manage hostel holidays and important events.</p>
+  return (
+    <div className="holidays-page">
+      <div className="holidays-header">
+        <div>
+          <h1>Holiday Management</h1>
+          <p>
+            Manage hostel holidays and important events.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="holidays-refresh"
+          onClick={loadHolidays}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "Refresh"}
+        </button>
+      </div>
 
       {message && (
-        <p style={{ color: "green" }}>{message}</p>
+        <div className="holidays-alert success">
+          {message}
+        </div>
       )}
 
       {error && (
-        <p style={{ color: "red" }}>{error}</p>
+        <div className="holidays-alert error">
+          {error}
+        </div>
       )}
 
-      <div style={styles.formContainer}>
-        <h2>
-          {editingId ? "Update Holiday" : "Add New Holiday"}
-        </h2>
+      <div className="holidays-summary">
+        <div className="holidays-summary-card">
+          <span>Total Holidays</span>
+          <h2>{holidays.length}</h2>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <label>Holiday Name</label>
+        <div className="holidays-summary-card">
+          <span>National</span>
+          <h2>
+            {holidays.filter(
+              (holiday) => holiday.category === "National"
+            ).length}
+          </h2>
+        </div>
 
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Enter holiday name"
-            required
-            style={styles.input}
-          />
+        <div className="holidays-summary-card">
+          <span>Festival</span>
+          <h2>
+            {holidays.filter(
+              (holiday) => holiday.category === "Festival"
+            ).length}
+          </h2>
+        </div>
 
-          <label>Holiday Date</label>
-
-          <input
-            type="date"
-            name="date"
-            value={form.date}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-
-          <label>Category</label>
-
-          <select
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            style={styles.input}
-          >
-            <option value="National">National</option>
-            <option value="Festival">Festival</option>
-            <option value="College">College</option>
-            <option value="Other">Other</option>
-          </select>
-
-          <label>Description</label>
-
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Enter holiday description"
-            style={styles.input}
-          />
-
-          <button type="submit" style={styles.submitButton}>
-            {editingId ? "Update Holiday" : "Add Holiday"}
-          </button>
-
-          {editingId && (
-            <button
-              type="button"
-              onClick={resetForm}
-              style={styles.cancelButton}
-            >
-              Cancel
-            </button>
-          )}
-        </form>
+        <div className="holidays-summary-card">
+          <span>College</span>
+          <h2>
+            {holidays.filter(
+              (holiday) => holiday.category === "College"
+            ).length}
+          </h2>
+        </div>
       </div>
 
-      <div style={styles.listContainer}>
-        <h2>Holiday List</h2>
+      <section className="holidays-form-section">
+        <div className="holidays-section-heading">
+          <h2>
+            {editingId ? "Update Holiday" : "Add New Holiday"}
+          </h2>
+          <p>
+            Enter the holiday information below.
+          </p>
+        </div>
 
-        {holidays.length === 0 ? (
-          <p>No holidays added yet.</p>
+        <form onSubmit={handleSubmit}>
+          <div className="holidays-form-grid">
+            <div className="holidays-field">
+              <label htmlFor="holiday-name">
+                Holiday Name
+              </label>
+
+              <input
+                id="holiday-name"
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Enter holiday name"
+                required
+              />
+            </div>
+
+            <div className="holidays-field">
+              <label htmlFor="holiday-date">
+                Holiday Date
+              </label>
+
+              <input
+                id="holiday-date"
+                type="date"
+                name="date"
+                value={form.date}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="holidays-field">
+              <label htmlFor="holiday-category">
+                Category
+              </label>
+
+              <select
+                id="holiday-category"
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+              >
+                <option value="National">National</option>
+                <option value="Festival">Festival</option>
+                <option value="College">College</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div className="holidays-field full-width">
+              <label htmlFor="holiday-description">
+                Description
+              </label>
+
+              <textarea
+                id="holiday-description"
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Enter holiday description"
+                rows="4"
+              />
+            </div>
+          </div>
+
+          <div className="holidays-form-actions">
+            <button
+              type="submit"
+              className="holidays-submit"
+              disabled={saving}
+            >
+              {saving
+                ? "Saving..."
+                : editingId
+                  ? "Update Holiday"
+                  : "Add Holiday"}
+            </button>
+
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="holidays-cancel"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </section>
+
+      <section className="holidays-list-section">
+        <div className="holidays-section-heading">
+          <h2>Holiday List</h2>
+          <p>All added holidays and important events.</p>
+        </div>
+
+        {loading ? (
+          <p className="holidays-empty">
+            Loading holidays...
+          </p>
+        ) : holidays.length === 0 ? (
+          <p className="holidays-empty">
+            No holidays added yet.
+          </p>
         ) : (
-          <div style={styles.grid}>
+          <div className="holidays-grid">
             {holidays.map((holiday) => (
-              <div key={holiday._id} style={styles.card}>
-                <h3>{holiday.name}</h3>
+              <div
+                key={holiday._id}
+                className="holiday-card"
+              >
+                <div className="holiday-card-top">
+                  <h3>{holiday.name}</h3>
 
-                <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(
-                    holiday.date
-                  ).toLocaleDateString()}
-                </p>
+                  <span className={categoryClass(holiday.category)}>
+                    {holiday.category || "Other"}
+                  </span>
+                </div>
 
-                <p>
-                  <strong>Category:</strong>{" "}
-                  {holiday.category}
-                </p>
+                <div className="holiday-date">
+                  <span>Date</span>
+                  <strong>
+                    {new Date(
+                      holiday.date
+                    ).toLocaleDateString()}
+                  </strong>
+                </div>
 
-                <p>{holiday.description}</p>
+                <div className="holiday-description">
+                  <span>Description</span>
+                  <p>
+                    {holiday.description || "No description provided."}
+                  </p>
+                </div>
 
-                <button
-                  onClick={() => editHoliday(holiday)}
-                  style={styles.editButton}
-                >
-                  Edit
-                </button>
+                <div className="holiday-card-actions">
+                  <button
+                    type="button"
+                    className="holiday-edit"
+                    onClick={() => editHoliday(holiday)}
+                  >
+                    Edit
+                  </button>
 
-                <button
-                  onClick={() => deleteHoliday(holiday._id)}
-                  style={styles.deleteButton}
-                >
-                  Delete
-                </button>
+                  <button
+                    type="button"
+                    className="holiday-delete"
+                    onClick={() => deleteHoliday(holiday._id)}
+                    disabled={deletingId === holiday._id}
+                  >
+                    {deletingId === holiday._id
+                      ? "Deleting..."
+                      : "Delete"}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: "25px",
-    fontFamily: "Arial, sans-serif",
-  },
-
-  formContainer: {
-    maxWidth: "550px",
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    marginBottom: "30px",
-  },
-
-  input: {
-    display: "block",
-    width: "100%",
-    padding: "10px",
-    margin: "8px 0 16px",
-    boxSizing: "border-box",
-  },
-
-  submitButton: {
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    padding: "10px 18px",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-
-  cancelButton: {
-    marginLeft: "10px",
-    padding: "10px 18px",
-    cursor: "pointer",
-  },
-
-  listContainer: {
-    marginTop: "25px",
-  },
-
-  grid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit, minmax(230px, 1fr))",
-    gap: "15px",
-  },
-
-  card: {
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    padding: "18px",
-    background: "#f8fafc",
-  },
-
-  editButton: {
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    padding: "8px 15px",
-    marginRight: "8px",
-    cursor: "pointer",
-  },
-
-  deleteButton: {
-    background: "#dc2626",
-    color: "white",
-    border: "none",
-    padding: "8px 15px",
-    cursor: "pointer",
-  },
-};

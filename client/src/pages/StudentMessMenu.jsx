@@ -21,7 +21,8 @@ function StudentMessMenu() {
       );
     } catch (err) {
       setError(
-        err.response?.data?.message || "Unable to load mess menu."
+        err.response?.data?.message ||
+        "Unable to load mess menu."
       );
     } finally {
       setLoading(false);
@@ -38,125 +39,139 @@ function StudentMessMenu() {
   };
 
   return (
-    <div className="dashboard-main">
-      <div style={{ marginBottom: "25px" }}>
-        <Link
-          to="/student-dashboard"
-          style={{
-            color: "#38bdf8",
-            textDecoration: "none",
-            fontSize: "14px"
-          }}
-        >
-          ← Back to Student Dashboard
-        </Link>
+    <div className="student-mess-page">
+      <Link
+        to="/student-dashboard"
+        className="mess-back-link"
+      >
+        ← Back to Student Dashboard
+      </Link>
 
-        <h1 className="dashboard-title" style={{ marginTop: "18px" }}>
-          Student Mess Menu
-        </h1>
-
-        <p className="dashboard-subtitle">
+      <div className="mess-page-header">
+        <h1>Student Mess Menu</h1>
+        <p>
           View your daily hostel food menu.
         </p>
       </div>
 
       {loading && (
-        <div className="dashboard-card">
-          <p style={{ color: "#cbd5e1" }}>Loading menu...</p>
+        <div className="mess-loading-card">
+          Loading menu...
         </div>
       )}
 
       {error && (
-        <div
-          style={{
-            padding: "12px",
-            marginBottom: "20px",
-            borderRadius: "8px",
-            color: "#fb7185",
-            background: "rgba(251, 113, 133, 0.12)"
-          }}
-        >
+        <div className="mess-error">
           {error}
         </div>
       )}
 
       {!loading && !error && menus.length === 0 && (
-        <div className="dashboard-card">
-          <p style={{ color: "#94a3b8" }}>
-            No mess menus have been added yet.
+        <div className="mess-empty-card">
+          <span>🍽️</span>
+          <h3>No Mess Menu Available</h3>
+          <p>
+            The hostel menu will appear here once it is added.
           </p>
         </div>
       )}
 
       {!loading && !error && menus.length > 0 && (
-        <div className="dashboard-grid">
-          {meals.map((meal) => {
-            const mealMenus = menus.filter(
-              (menu) => menu.mealType === meal
-            );
+        <>
+          <div className="mess-summary">
+            <div className="mess-summary-card">
+              <span>🍽️</span>
+              <div>
+                <p>Total Menu Records</p>
+                <h2>{menus.length}</h2>
+              </div>
+            </div>
 
-            return (
-              <section
-                key={meal}
-                className="dashboard-card"
-                style={{
-                  borderTop: "4px solid #38bdf8"
-                }}
-              >
-                <h2
-                  style={{
-                    color: "#e5e7eb",
-                    marginTop: 0
-                  }}
-                >
-                  {mealIcons[meal]} {meal}
-                </h2>
+            <div className="mess-summary-card">
+              <span>🥗</span>
+              <div>
+                <p>Meal Categories</p>
+                <h2>{meals.length}</h2>
+              </div>
+            </div>
+          </div>
 
-                {mealMenus.length === 0 ? (
-                  <p style={{ color: "#94a3b8" }}>
-                    No {meal.toLowerCase()} menu available.
-                  </p>
-                ) : (
-                  mealMenus.map((menu) => (
-                    <div
-                      key={menu._id}
-                      style={{
-                        background: "#0f172a",
-                        border: "1px solid #26364b",
-                        padding: "16px",
-                        marginTop: "14px",
-                        borderRadius: "10px"
-                      }}
-                    >
-                      <p style={{ color: "#cbd5e1" }}>
-                        <strong>Date:</strong>{" "}
-                        {menu.date
-                          ? new Date(menu.date).toLocaleDateString()
-                          : "Not specified"}
-                      </p>
+          <section className="mess-menu-section">
+            <div className="mess-section-heading">
+              <h2>Daily Meal Schedule</h2>
+              <span>Hostel Food Menu</span>
+            </div>
 
-                      <p style={{ color: "#cbd5e1" }}>
-                        <strong>Food Items:</strong>{" "}
-                        {menu.items}
-                      </p>
+            <div className="mess-meals-grid">
+              {meals.map((meal) => {
+                const mealMenus = menus.filter(
+                  (menu) => menu.mealType === meal
+                );
 
-                      <p style={{ color: "#34d399" }}>
-                        <strong>Price:</strong> ₹
-                        {Number(menu.price || 0).toFixed(2)}
-                      </p>
-
-                      {menu.notes && (
-                        <p style={{ color: "#94a3b8" }}>
-                          <strong>Notes:</strong> {menu.notes}
-                        </p>
-                      )}
+                return (
+                  <article
+                    key={meal}
+                    className="mess-meal-card"
+                  >
+                    <div className="mess-meal-heading">
+                      <span className="mess-meal-icon">
+                        {mealIcons[meal]}
+                      </span>
+                      <h3>{meal}</h3>
                     </div>
-                  ))
-                )}
-              </section>
-            );
-          })}
-        </div>
+
+                    {mealMenus.length === 0 ? (
+                      <p className="mess-no-meal">
+                        No {meal.toLowerCase()} menu available.
+                      </p>
+                    ) : (
+                      <div className="mess-menu-records">
+                        {mealMenus.map((menu) => (
+                          <div
+                            key={menu._id}
+                            className="mess-menu-record"
+                          >
+                            <div className="mess-menu-date">
+                              <span>Menu Date</span>
+                              <strong>
+                                {menu.date
+                                  ? new Date(
+                                      menu.date
+                                    ).toLocaleDateString()
+                                  : "Not specified"}
+                              </strong>
+                            </div>
+
+                            <div className="mess-food-items">
+                              <span>Food Items</span>
+                              <p>{menu.items}</p>
+                            </div>
+
+                            <div className="mess-price">
+                              <span>Price</span>
+                              <strong>
+                                ₹{Number(
+                                  menu.price || 0
+                                ).toFixed(2)}
+                              </strong>
+                            </div>
+
+                            {menu.notes && (
+                              <div className="mess-notes">
+                                <strong>Notes</strong>
+                                <p>{menu.notes}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        </>
       )}
     </div>
   );

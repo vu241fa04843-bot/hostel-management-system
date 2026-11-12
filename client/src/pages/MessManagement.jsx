@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import API from "../services/api";
 
@@ -25,30 +24,11 @@ const initialRecord = {
   rate: "",
 };
 
-const inputStyle = {
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "10px",
-  borderRadius: "8px",
-  border: "1px solid #cbd5e1",
-  background: "white",
-  color: "#172033",
-  marginTop: "5px",
-};
-
-const buttonStyle = {
-  padding: "9px 14px",
-  border: "none",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontWeight: "600",
-};
-
 function formatDate(date) {
   return date ? new Date(date).toLocaleDateString() : "—";
 }
 
-export default function MessManagement() {
+function MessManagement() {
   const [menus, setMenus] = useState([]);
   const [records, setRecords] = useState([]);
   const [students, setStudents] = useState([]);
@@ -75,11 +55,13 @@ export default function MessManagement() {
 
       setMenus(Array.isArray(menuResponse.data) ? menuResponse.data : []);
       setRecords(Array.isArray(recordResponse.data) ? recordResponse.data : []);
-      setStudents(Array.isArray(studentResponse.data) ? studentResponse.data : []);
+      setStudents(
+        Array.isArray(studentResponse.data) ? studentResponse.data : []
+      );
     } catch (err) {
       setError(
         err.response?.data?.message ||
-        "Could not load mess data. Check that the backend is running."
+          "Could not load mess data. Check that the backend is running."
       );
     } finally {
       setLoading(false);
@@ -129,6 +111,7 @@ export default function MessManagement() {
     }
 
     setSaving(true);
+
     try {
       const payload = {
         ...menuForm,
@@ -147,9 +130,7 @@ export default function MessManagement() {
       setEditingMenuId(null);
       await loadData();
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Could not save the menu."
-      );
+      setError(err.response?.data?.message || "Could not save the menu.");
     } finally {
       setSaving(false);
     }
@@ -163,6 +144,7 @@ export default function MessManagement() {
       price: String(menu.price),
       notes: menu.notes || "",
     });
+
     setEditingMenuId(menu._id);
     setActiveTab("menu");
     setError("");
@@ -196,6 +178,7 @@ export default function MessManagement() {
     }
 
     setSaving(true);
+
     try {
       await API.post("/meal-records", {
         ...recordForm,
@@ -204,11 +187,13 @@ export default function MessManagement() {
       });
 
       setNotice("Meal record added successfully.");
+
       setRecordForm({
         ...initialRecord,
         date: today(),
         studentId: recordForm.studentId,
       });
+
       await loadData();
     } catch (err) {
       setError(
@@ -236,85 +221,112 @@ export default function MessManagement() {
     }
   }
 
+  const cancelMenuEdit = () => {
+    setEditingMenuId(null);
+    setMenuForm({ ...initialMenu, date: today() });
+  };
+
   return (
-    <main
-      style={{
-        maxWidth: "1200px",
-        margin: "0 auto",
-        padding: "24px",
-        fontFamily: "Arial, sans-serif",
-        color: "#172033",
-      }}
-    >
-      <header style={{ marginBottom: "24px" }}>
-        <h1 style={{ marginBottom: "8px" }}>Food &amp; Mess Management</h1>
-        <p style={{ color: "#64748b" }}>
-          Manage daily menus, record meals, and calculate student mess charges.
-        </p>
+    <main className="mess-page">
+      <header className="mess-header">
+        <div>
+          <span className="mess-eyebrow">ADMINISTRATION</span>
+          <h1>Food &amp; Mess Management</h1>
+          <p>
+            Manage daily menus, record student meals, and calculate mess
+            charges.
+          </p>
+        </div>
+
+        <button
+          className="mess-refresh-button"
+          type="button"
+          onClick={loadData}
+          disabled={loading}
+        >
+          {loading ? "Refreshing..." : "↻ Refresh"}
+        </button>
       </header>
 
       {error && (
-        <div role="alert" style={messageStyle("#fee2e2", "#991b1b")}>
+        <div className="mess-alert mess-error" role="alert">
           {error}
         </div>
       )}
 
       {notice && (
-        <div role="status" style={messageStyle("#dcfce7", "#166534")}>
+        <div className="mess-alert mess-success" role="status">
           {notice}
         </div>
       )}
 
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <SummaryCard label="Menu entries" value={menus.length} />
-        <SummaryCard label="Today's meal records" value={todayRecords.length} />
+      <section className="mess-summary-grid">
         <SummaryCard
-          label="Recorded meal charges"
+          icon="🍽️"
+          label="Menu Entries"
+          value={menus.length}
+          description="Saved meal menus"
+        />
+        <SummaryCard
+          icon="📋"
+          label="Today's Meal Records"
+          value={todayRecords.length}
+          description="Meals recorded today"
+        />
+        <SummaryCard
+          icon="₹"
+          label="Recorded Meal Charges"
           value={`₹${totalCharges.toFixed(2)}`}
+          description="Total recorded charges"
         />
       </section>
 
-      <nav style={{ display: "flex", gap: "10px", marginBottom: "22px", flexWrap: "wrap" }}>
+      <nav className="mess-tabs" aria-label="Mess management sections">
         <button
-          style={buttonStyle}
+          type="button"
+          className={activeTab === "menu" ? "active" : ""}
           onClick={() => setActiveTab("menu")}
         >
-          Manage Menu
+          <span>🍴</span> Manage Menu
         </button>
+
         <button
-          style={buttonStyle}
+          type="button"
+          className={activeTab === "records" ? "active" : ""}
           onClick={() => setActiveTab("records")}
         >
-          Record a Meal
+          <span>📝</span> Record a Meal
         </button>
+
         <button
-          style={buttonStyle}
+          type="button"
+          className={activeTab === "charges" ? "active" : ""}
           onClick={() => setActiveTab("charges")}
         >
-          Student Charges
+          <span>💳</span> Student Charges
         </button>
       </nav>
 
       {loading ? (
-        <p>Loading mess data...</p>
+        <div className="mess-loading">Loading mess data...</div>
       ) : (
         <>
           {activeTab === "menu" && (
-            <section style={panelStyle}>
-              <h2>{editingMenuId ? "Edit Menu" : "Add Daily Menu"}</h2>
+            <section className="mess-panel">
+              <div className="mess-section-heading">
+                <div>
+                  <h2>{editingMenuId ? "Edit Menu" : "Add Daily Menu"}</h2>
+                  <p>Create and maintain the daily hostel food menu.</p>
+                </div>
+                {editingMenuId && (
+                  <span className="mess-edit-label">Editing menu</span>
+                )}
+              </div>
 
               <form onSubmit={submitMenu}>
-                <div style={gridStyle}>
+                <div className="mess-form-grid">
                   <Field label="Date">
                     <input
-                      style={inputStyle}
                       type="date"
                       name="date"
                       value={menuForm.date}
@@ -325,67 +337,73 @@ export default function MessManagement() {
 
                   <Field label="Meal">
                     <select
-                      style={inputStyle}
                       name="mealType"
                       value={menuForm.mealType}
                       onChange={updateMenuField}
                       required
                     >
                       {mealTypes.map((meal) => (
-                        <option key={meal} value={meal}>{meal}</option>
+                        <option key={meal} value={meal}>
+                          {meal}
+                        </option>
                       ))}
                     </select>
                   </Field>
 
                   <Field label="Price per meal (₹)">
                     <input
-                      style={inputStyle}
                       type="number"
                       name="price"
                       min="0"
                       step="0.01"
                       value={menuForm.price}
                       onChange={updateMenuField}
+                      placeholder="Enter price"
                       required
+                    />
+                  </Field>
+
+                  <Field label="Menu items" wide>
+                    <textarea
+                      name="items"
+                      value={menuForm.items}
+                      onChange={updateMenuField}
+                      placeholder="Example: Idli, sambar, chutney"
+                      maxLength={1000}
+                      rows={3}
+                      required
+                    />
+                  </Field>
+
+                  <Field label="Notes (optional)" wide>
+                    <input
+                      name="notes"
+                      value={menuForm.notes}
+                      onChange={updateMenuField}
+                      placeholder="Example: Vegetarian"
+                      maxLength={500}
                     />
                   </Field>
                 </div>
 
-                <Field label="Menu items">
-                  <textarea
-                    style={inputStyle}
-                    name="items"
-                    value={menuForm.items}
-                    onChange={updateMenuField}
-                    placeholder="Example: Idli, sambar, chutney"
-                    maxLength={1000}
-                    required
-                  />
-                </Field>
-
-                <Field label="Notes (optional)">
-                  <input
-                    style={inputStyle}
-                    name="notes"
-                    value={menuForm.notes}
-                    onChange={updateMenuField}
-                    placeholder="Example: Vegetarian"
-                    maxLength={500}
-                  />
-                </Field>
-
-                <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
-                  <button disabled={saving} style={buttonStyle} type="submit">
-                    {saving ? "Saving..." : editingMenuId ? "Update Menu" : "Add Menu"}
+                <div className="mess-form-actions">
+                  <button
+                    className="mess-primary-button"
+                    disabled={saving}
+                    type="submit"
+                  >
+                    {saving
+                      ? "Saving..."
+                      : editingMenuId
+                        ? "Update Menu"
+                        : "Add Menu"}
                   </button>
+
                   {editingMenuId && (
                     <button
-                      style={buttonStyle}
+                      className="mess-secondary-button"
                       type="button"
-                      onClick={() => {
-                        setEditingMenuId(null);
-                        setMenuForm({ ...initialMenu, date: today() });
-                      }}
+                      onClick={cancelMenuEdit}
                     >
                       Cancel Edit
                     </button>
@@ -393,62 +411,90 @@ export default function MessManagement() {
                 </div>
               </form>
 
-              <h2 style={{ marginTop: "30px" }}>Saved Menus</h2>
-              <div style={tableWrapStyle}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Meal</th>
-                      <th>Items</th>
-                      <th>Price</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {menus.map((menu) => (
-                      <tr key={menu._id}>
-                        <td>{formatDate(menu.date)}</td>
-                        <td>{menu.mealType}</td>
-                        <td>
-                          {menu.items}
-                          {menu.notes && <small><br />{menu.notes}</small>}
-                        </td>
-                        <td>₹{Number(menu.price).toFixed(2)}</td>
-                        <td>
-                          <button
-                            style={buttonStyle}
-                            onClick={() => startEditingMenu(menu)}
-                          >
-                            Edit
-                          </button>{" "}
-                          <button
-                            style={buttonStyle}
-                            onClick={() => deleteMenu(menu._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
+              <div className="mess-table-section">
+                <div className="mess-section-heading">
+                  <div>
+                    <h2>Saved Menus</h2>
+                    <p>All menus currently available in the system.</p>
+                  </div>
+                  <span className="mess-count">{menus.length} entries</span>
+                </div>
+
+                <div className="mess-table-wrap">
+                  <table className="mess-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Meal</th>
+                        <th>Items</th>
+                        <th>Price</th>
+                        <th>Actions</th>
                       </tr>
-                    ))}
-                    {menus.length === 0 && (
-                      <tr><td colSpan="5">No menus added yet.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {menus.map((menu) => (
+                        <tr key={menu._id}>
+                          <td>{formatDate(menu.date)}</td>
+                          <td>
+                            <span className="mess-meal-badge">
+                              {menu.mealType}
+                            </span>
+                          </td>
+                          <td className="mess-items-cell">
+                            {menu.items}
+                            {menu.notes && (
+                              <small className="mess-note">{menu.notes}</small>
+                            )}
+                          </td>
+                          <td>₹{Number(menu.price).toFixed(2)}</td>
+                          <td>
+                            <div className="mess-row-actions">
+                              <button
+                                className="mess-small-edit"
+                                type="button"
+                                onClick={() => startEditingMenu(menu)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                className="mess-small-delete"
+                                type="button"
+                                onClick={() => deleteMenu(menu._id)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {menus.length === 0 && (
+                        <tr>
+                          <td colSpan="5" className="mess-empty">
+                            No menus added yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </section>
           )}
 
           {activeTab === "records" && (
-            <section style={panelStyle}>
-              <h2>Record a Student Meal</h2>
+            <section className="mess-panel">
+              <div className="mess-section-heading">
+                <div>
+                  <h2>Record a Student Meal</h2>
+                  <p>Save meal consumption details for a student.</p>
+                </div>
+              </div>
 
               <form onSubmit={submitRecord}>
-                <div style={gridStyle}>
+                <div className="mess-form-grid">
                   <Field label="Student">
                     <select
-                      style={inputStyle}
                       name="studentId"
                       value={recordForm.studentId}
                       onChange={updateRecordField}
@@ -465,7 +511,6 @@ export default function MessManagement() {
 
                   <Field label="Date">
                     <input
-                      style={inputStyle}
                       type="date"
                       name="date"
                       value={recordForm.date}
@@ -476,21 +521,21 @@ export default function MessManagement() {
 
                   <Field label="Meal">
                     <select
-                      style={inputStyle}
                       name="mealType"
                       value={recordForm.mealType}
                       onChange={updateRecordField}
                       required
                     >
                       {mealTypes.map((meal) => (
-                        <option key={meal} value={meal}>{meal}</option>
+                        <option key={meal} value={meal}>
+                          {meal}
+                        </option>
                       ))}
                     </select>
                   </Field>
 
                   <Field label="Quantity">
                     <input
-                      style={inputStyle}
                       type="number"
                       name="quantity"
                       min="1"
@@ -503,93 +548,130 @@ export default function MessManagement() {
 
                   <Field label="Rate per meal (₹)">
                     <input
-                      style={inputStyle}
                       type="number"
                       name="rate"
                       min="0"
                       step="0.01"
                       value={recordForm.rate}
                       onChange={updateRecordField}
+                      placeholder="Enter rate"
                       required
                     />
                   </Field>
                 </div>
 
-                <p>
-                  Estimated charge:{" "}
+                <div className="mess-estimate">
+                  <span>Estimated charge</span>
                   <strong>
-                    ₹{(
+                    ₹
+                    {(
                       Number(recordForm.quantity || 0) *
                       Number(recordForm.rate || 0)
                     ).toFixed(2)}
                   </strong>
-                </p>
+                </div>
 
-                <button disabled={saving || students.length === 0} style={buttonStyle}>
-                  {saving ? "Saving..." : "Save Meal Record"}
-                </button>
+                <div className="mess-form-actions">
+                  <button
+                    className="mess-primary-button"
+                    disabled={saving || students.length === 0}
+                    type="submit"
+                  >
+                    {saving ? "Saving..." : "Save Meal Record"}
+                  </button>
+                </div>
 
                 {students.length === 0 && (
-                  <p>Add a student in Student Management before recording meals.</p>
+                  <p className="mess-help-text">
+                    Add a student in Student Management before recording
+                    meals.
+                  </p>
                 )}
               </form>
 
-              <h2 style={{ marginTop: "30px" }}>Recent Meal Records</h2>
-              <div style={tableWrapStyle}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th>Student</th>
-                      <th>Date</th>
-                      <th>Meal</th>
-                      <th>Qty</th>
-                      <th>Rate</th>
-                      <th>Total</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {records.map((record) => (
-                      <tr key={record._id}>
-                        <td>{record.student?.name || "Student unavailable"}</td>
-                        <td>{formatDate(record.date)}</td>
-                        <td>{record.mealType}</td>
-                        <td>{record.quantity}</td>
-                        <td>₹{Number(record.rate).toFixed(2)}</td>
-                        <td>
-                          ₹{(
-                            Number(record.quantity) * Number(record.rate)
-                          ).toFixed(2)}
-                        </td>
-                        <td>
-                          <button
-                            style={buttonStyle}
-                            onClick={() => deleteRecord(record._id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
+              <div className="mess-table-section">
+                <div className="mess-section-heading">
+                  <div>
+                    <h2>Recent Meal Records</h2>
+                    <p>Recorded meals and their calculated charges.</p>
+                  </div>
+                  <span className="mess-count">{records.length} records</span>
+                </div>
+
+                <div className="mess-table-wrap">
+                  <table className="mess-table">
+                    <thead>
+                      <tr>
+                        <th>Student</th>
+                        <th>Date</th>
+                        <th>Meal</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                        <th>Action</th>
                       </tr>
-                    ))}
-                    {records.length === 0 && (
-                      <tr><td colSpan="7">No meal records yet.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {records.map((record) => (
+                        <tr key={record._id}>
+                          <td>
+                            {record.student?.name || "Student unavailable"}
+                          </td>
+                          <td>{formatDate(record.date)}</td>
+                          <td>{record.mealType}</td>
+                          <td>{record.quantity}</td>
+                          <td>₹{Number(record.rate).toFixed(2)}</td>
+                          <td>
+                            ₹
+                            {(
+                              Number(record.quantity) * Number(record.rate)
+                            ).toFixed(2)}
+                          </td>
+                          <td>
+                            <button
+                              className="mess-small-delete"
+                              type="button"
+                              onClick={() => deleteRecord(record._id)}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {records.length === 0 && (
+                        <tr>
+                          <td colSpan="7" className="mess-empty">
+                            No meal records yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </section>
           )}
 
           {activeTab === "charges" && (
-            <section style={panelStyle}>
-              <h2>Student Mess Charges</h2>
-              <p>
-                Charges are calculated from saved meal records. They are
-                separate from the existing Fee Management module.
-              </p>
+            <section className="mess-panel">
+              <div className="mess-section-heading">
+                <div>
+                  <h2>Student Mess Charges</h2>
+                  <p>
+                    Charges are calculated from saved meal records and are
+                    separate from the Fee Management module.
+                  </p>
+                </div>
+              </div>
 
-              <div style={tableWrapStyle}>
-                <table style={tableStyle}>
+              <div className="mess-charge-total">
+                <span>Total recorded mess charges</span>
+                <strong>₹{totalCharges.toFixed(2)}</strong>
+              </div>
+
+              <div className="mess-table-wrap">
+                <table className="mess-table">
                   <thead>
                     <tr>
                       <th>Student</th>
@@ -603,11 +685,12 @@ export default function MessManagement() {
                       const studentRecords = records.filter(
                         (record) => record.student?._id === student._id
                       );
+
                       const amount = studentRecords.reduce(
                         (sum, record) =>
                           sum +
                           Number(record.quantity || 0) *
-                          Number(record.rate || 0),
+                            Number(record.rate || 0),
                         0
                       );
 
@@ -620,8 +703,13 @@ export default function MessManagement() {
                         </tr>
                       );
                     })}
+
                     {students.length === 0 && (
-                      <tr><td colSpan="4">No students found.</td></tr>
+                      <tr>
+                        <td colSpan="4" className="mess-empty">
+                          No students found.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
@@ -634,64 +722,26 @@ export default function MessManagement() {
   );
 }
 
-function SummaryCard({ label, value }) {
+function SummaryCard({ icon, label, value, description }) {
   return (
-    <article
-      style={{
-        padding: "20px",
-        borderRadius: "12px",
-        background: "#eff6ff",
-        border: "1px solid #dbeafe",
-      }}
-    >
-      <p style={{ margin: 0, color: "#475569" }}>{label}</p>
-      <h2 style={{ marginBottom: 0 }}>{value}</h2>
+    <article className="mess-summary-card">
+      <div className="mess-summary-top">
+        <span className="mess-summary-icon">{icon}</span>
+        <span className="mess-summary-label">{label}</span>
+      </div>
+      <h2>{value}</h2>
+      <p>{description}</p>
     </article>
   );
 }
 
-function Field({ label, children }) {
+function Field({ label, children, wide = false }) {
   return (
-    <label style={{ display: "block", marginBottom: "14px" }}>
-      <span style={{ fontWeight: "600" }}>{label}</span>
+    <label className={`mess-field ${wide ? "mess-field-wide" : ""}`}>
+      <span>{label}</span>
       {children}
     </label>
   );
 }
 
-function messageStyle(background, color) {
-  return {
-    background,
-    color,
-    padding: "12px",
-    borderRadius: "8px",
-    marginBottom: "14px",
-  };
-}
-
-const panelStyle = {
-  background: "#ffffff",
-  padding: "22px",
-  border: "1px solid #e2e8f0",
-  borderRadius: "12px",
-  marginBottom: "24px",
-  overflow: "hidden",
-};
-
-const gridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-  gap: "12px",
-};
-
-const tableWrapStyle = {
-  overflowX: "auto",
-  width: "100%",
-};
-
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse",
-  textAlign: "left",
-  marginTop: "12px",
-};
+export default MessManagement;

@@ -122,7 +122,8 @@ function Complaints() {
 
     try {
       await API.patch(`/complaints/${complaint._id}`, {
-        adminRemarks: remarks[complaint._id] ?? complaint.adminRemarks ?? "",
+        adminRemarks:
+          remarks[complaint._id] ?? complaint.adminRemarks ?? "",
       });
 
       setMessage("Admin remarks saved.");
@@ -178,139 +179,58 @@ function Complaints() {
 
   return (
     <main className="complaints-page">
-      <style>{`
-        .complaints-page {
-          max-width: 1200px;
-          margin: auto;
-          padding: 28px 18px;
-          color: #172033;
-          font-family: Arial, sans-serif;
-        }
-        .complaints-page h1 { margin-bottom: 8px; }
-        .complaints-muted { color: #667085; }
-        .complaints-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-          gap: 14px;
-          margin: 22px 0;
-        }
-        .complaints-panel, .complaint-card, .complaint-stat {
-          background: white;
-          border: 1px solid #e4e7ec;
-          border-radius: 12px;
-          padding: 18px;
-          box-shadow: 0 3px 12px #1018280a;
-        }
-        .complaint-stat span { color: #667085; font-size: 14px; }
-        .complaint-stat h2 { margin-bottom: 0; font-size: 27px; }
-        .complaints-panel { margin-bottom: 24px; }
-        .complaint-form {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 14px;
-          align-items: start;
-        }
-        .complaint-field {
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-        }
-        .complaint-field label {
-          font-weight: 600;
-          font-size: 14px;
-        }
-        .complaint-field input,
-        .complaint-field select,
-        .complaint-field textarea {
-          width: 100%;
-          box-sizing: border-box;
-          padding: 10px;
-          border: 1px solid #d0d5dd;
-          border-radius: 7px;
-          background: white;
-          font: inherit;
-        }
-        .complaint-field textarea {
-          min-height: 100px;
-          resize: vertical;
-        }
-        .complaint-wide { grid-column: 1 / -1; }
-        .complaint-button {
-          border: 0;
-          padding: 11px 15px;
-          border-radius: 7px;
-          background: #175cd3;
-          color: white;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        .complaint-button.delete { background: #b42318; }
-        .complaint-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-          gap: 16px;
-        }
-        .complaint-card h3 { margin-top: 0; overflow-wrap: anywhere; }
-        .complaint-card p { overflow-wrap: anywhere; }
-        .complaint-badge {
-          display: inline-block;
-          border-radius: 20px;
-          padding: 5px 9px;
-          background: #fffaeb;
-          color: #b54708;
-          font-size: 12px;
-          font-weight: 700;
-        }
-        .complaint-badge.progress {
-          background: #eff8ff;
-          color: #175cd3;
-        }
-        .complaint-badge.resolved {
-          background: #ecfdf3;
-          color: #027a48;
-        }
-        .complaint-error, .complaint-success {
-          padding: 12px;
-          margin: 14px 0;
-          border-radius: 8px;
-        }
-        .complaint-error { background: #fef3f2; color: #b42318; }
-        .complaint-success { background: #ecfdf3; color: #027a48; }
-        @media (max-width: 500px) {
-          .complaints-page { padding: 18px 10px; }
-          .complaint-wide { grid-column: auto; }
-        }
-      `}</style>
+      <header className="complaints-header">
+        <div>
+          <p className="complaints-eyebrow">ADMINISTRATION</p>
+          <h1>Complaint Management</h1>
+          <p className="complaints-muted">
+            Manage hostel issues, update complaint statuses, and track
+            resolutions.
+          </p>
+        </div>
+      </header>
 
-      <h1>Complaint Management</h1>
-      <p className="complaints-muted">
-        Submit hostel issues and track their progress.
-      </p>
+      {error && (
+        <div className="complaint-alert complaint-error" role="alert">
+          {error}
+        </div>
+      )}
 
-      {error && <div className="complaint-error" role="alert">{error}</div>}
-      {message && <div className="complaint-success" role="status">{message}</div>}
+      {message && (
+        <div className="complaint-alert complaint-success" role="status">
+          {message}
+        </div>
+      )}
 
       <section className="complaints-grid">
-        <div className="complaint-stat">
+        <article className="complaint-stat">
           <span>Total Complaints</span>
           <h2>{complaints.length}</h2>
-        </div>
-        <div className="complaint-stat">
+        </article>
+
+        <article className="complaint-stat">
           <span>Pending</span>
           <h2>{pendingCount}</h2>
-        </div>
-        <div className="complaint-stat">
+        </article>
+
+        <article className="complaint-stat">
           <span>In Progress</span>
           <h2>{progressCount}</h2>
-        </div>
-        <div className="complaint-stat">
+        </article>
+
+        <article className="complaint-stat">
           <span>Resolved</span>
           <h2>{resolvedCount}</h2>
-        </div>
+        </article>
       </section>
 
       <section className="complaints-panel">
-        <h2>Submit a Complaint</h2>
+        <div className="complaint-section-heading">
+          <div>
+            <h2>Submit a Complaint</h2>
+            <p>Create a complaint on behalf of a hostel student.</p>
+          </div>
+        </div>
 
         <form className="complaint-form" onSubmit={handleSubmit}>
           <div className="complaint-field">
@@ -391,17 +311,28 @@ function Complaints() {
         )}
       </section>
 
-      <section>
-        <h2>All Complaints</h2>
+      <section className="complaint-records-section">
+        <div className="complaint-section-heading">
+          <div>
+            <h2>All Complaints</h2>
+            <p>Review complaints and manage their progress.</p>
+          </div>
+          <span className="complaint-record-count">
+            {complaints.length} records
+          </span>
+        </div>
 
         {loading ? (
-          <p>Loading complaints...</p>
+          <div className="complaint-empty-state">Loading complaints...</div>
         ) : complaints.length === 0 ? (
-          <p>No complaints have been submitted yet.</p>
+          <div className="complaint-empty-state">
+            No complaints have been submitted yet.
+          </div>
         ) : (
           <div className="complaint-list">
             {complaints.map((complaint) => {
               const student = complaint.student || {};
+
               const badgeClass =
                 complaint.status === "Resolved"
                   ? "resolved"
@@ -411,34 +342,41 @@ function Complaints() {
 
               return (
                 <article className="complaint-card" key={complaint._id}>
-                  <h3>{complaint.title}</h3>
+                  <div className="complaint-card-header">
+                    <div>
+                      <p className="complaint-card-label">
+                        {complaint.category || "GENERAL"}
+                      </p>
+                      <h3>{complaint.title}</h3>
+                    </div>
 
-                  <p>
-                    <strong>Student:</strong> {student.name || "Unknown"}
-                  </p>
-                  <p>
-                    <strong>Student ID:</strong> {student.studentId || "—"}
-                  </p>
-                  <p>
-                    <strong>Room:</strong> {student.roomNumber || "—"}
-                  </p>
-                  <p>
-                    <strong>Category:</strong> {complaint.category}
-                  </p>
-                  <p>
-                    <strong>Description:</strong> {complaint.description}
-                  </p>
-                  <p>
-                    <strong>Submitted:</strong> {formatDate(complaint.createdAt)}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
                     <span className={`complaint-badge ${badgeClass}`}>
                       {complaint.status}
                     </span>
-                  </p>
+                  </div>
 
-                  <div className="complaint-field">
+                  <div className="complaint-details">
+                    <p>
+                      <strong>Student:</strong> {student.name || "Unknown"}
+                    </p>
+                    <p>
+                      <strong>Student ID:</strong> {student.studentId || "—"}
+                    </p>
+                    <p>
+                      <strong>Room:</strong> {student.roomNumber || "—"}
+                    </p>
+                    <p>
+                      <strong>Submitted:</strong>{" "}
+                      {formatDate(complaint.createdAt)}
+                    </p>
+                  </div>
+
+                  <div className="complaint-description">
+                    <strong>Description</strong>
+                    <p>{complaint.description}</p>
+                  </div>
+
+                  <div className="complaint-field complaint-status-field">
                     <label htmlFor={`status-${complaint._id}`}>
                       Update Status
                     </label>
@@ -457,7 +395,7 @@ function Complaints() {
                     </select>
                   </div>
 
-                  <div className="complaint-field" style={{ marginTop: 14 }}>
+                  <div className="complaint-field complaint-remarks-field">
                     <label htmlFor={`remarks-${complaint._id}`}>
                       Admin Remarks
                     </label>
@@ -479,23 +417,23 @@ function Complaints() {
                     />
                   </div>
 
-                  <button
-                    className="complaint-button"
-                    type="button"
-                    style={{ marginTop: 10, marginRight: 8 }}
-                    onClick={() => handleSaveRemarks(complaint)}
-                  >
-                    Save Remarks
-                  </button>
+                  <div className="complaint-actions">
+                    <button
+                      className="complaint-button"
+                      type="button"
+                      onClick={() => handleSaveRemarks(complaint)}
+                    >
+                      Save Remarks
+                    </button>
 
-                  <button
-                    className="complaint-button delete"
-                    type="button"
-                    style={{ marginTop: 10 }}
-                    onClick={() => handleDelete(complaint)}
-                  >
-                    Delete Complaint
-                  </button>
+                    <button
+                      className="complaint-button delete"
+                      type="button"
+                      onClick={() => handleDelete(complaint)}
+                    >
+                      Delete Complaint
+                    </button>
+                  </div>
                 </article>
               );
             })}

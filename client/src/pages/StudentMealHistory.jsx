@@ -38,172 +38,119 @@ function StudentMealHistory() {
   );
 
   return (
-    <div className="dashboard-main">
-      <div style={{ marginBottom: "25px" }}>
-        <Link
-          to="/student-dashboard"
-          style={{
-            color: "#38bdf8",
-            textDecoration: "none",
-            fontSize: "14px"
-          }}
-        >
-          ← Back to Student Dashboard
-        </Link>
+    <div className="student-meal-history-page">
+      <Link
+        to="/student-dashboard"
+        className="meal-history-back-link"
+      >
+        ← Back to Student Dashboard
+      </Link>
 
-        <h1 className="dashboard-title" style={{ marginTop: "18px" }}>
-          My Meal History
-        </h1>
-
-        <p className="dashboard-subtitle">
+      <div className="meal-history-header">
+        <h1>My Meal History</h1>
+        <p>
           View your recorded hostel meals and charges.
         </p>
       </div>
 
       {loading && (
-        <div className="dashboard-card">
-          <p style={{ color: "#cbd5e1" }}>
-            Loading meal records...
-          </p>
+        <div className="meal-history-loading">
+          Loading meal records...
         </div>
       )}
 
       {error && (
-        <div
-          style={{
-            padding: "12px",
-            marginBottom: "20px",
-            borderRadius: "8px",
-            color: "#fb7185",
-            background: "rgba(251, 113, 133, 0.12)"
-          }}
-        >
+        <div className="meal-history-error">
           {error}
         </div>
       )}
 
       {!loading && !error && (
         <>
-          <div
-            className="dashboard-card"
-            style={{
-              marginBottom: "25px",
-              borderLeft: "4px solid #34d399"
-            }}
-          >
-            <p
-              style={{
-                color: "#94a3b8",
-                margin: "0 0 10px"
-              }}
-            >
-              Total Meal Charges
-            </p>
+          <div className="meal-charge-card">
+            <div className="meal-charge-icon">₹</div>
 
-            <h2
-              style={{
-                color: "#34d399",
-                fontSize: "28px",
-                margin: 0
-              }}
-            >
-              ₹{totalCharges.toFixed(2)}
-            </h2>
+            <div>
+              <p>Total Meal Charges</p>
+              <h2>₹{totalCharges.toFixed(2)}</h2>
+            </div>
           </div>
 
-          <div className="dashboard-card">
-            <h2 style={{ color: "#e5e7eb", marginTop: 0 }}>
-              Meal Records
-            </h2>
+          <section className="meal-records-section">
+            <div className="meal-records-heading">
+              <h2>Meal Records</h2>
+              <span>{records.length} Records</span>
+            </div>
 
             {records.length === 0 ? (
-              <p style={{ color: "#94a3b8" }}>
-                No meal records found.
-              </p>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    borderCollapse: "collapse",
-                    minWidth: "650px",
-                    color: "#e5e7eb"
-                  }}
-                >
-                  <thead>
-                    <tr style={{ background: "#0f172a" }}>
-                      {[
-                        "Date",
-                        "Meal",
-                        "Quantity",
-                        "Rate",
-                        "Total"
-                      ].map((heading) => (
-                        <th
-                          key={heading}
-                          style={{
-                            padding: "14px",
-                            textAlign: "left",
-                            borderBottom: "1px solid #334155",
-                            color: "#38bdf8"
-                          }}
-                        >
-                          {heading}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {records.map((record) => (
-                      <tr key={record._id}>
-                        <td style={cellStyle}>
-                          {record.date
-                            ? new Date(record.date).toLocaleDateString()
-                            : "Not specified"}
-                        </td>
-
-                        <td style={cellStyle}>
-                          {record.mealType}
-                        </td>
-
-                        <td style={cellStyle}>
-                          {record.quantity}
-                        </td>
-
-                        <td style={cellStyle}>
-                          ₹{Number(record.rate || 0).toFixed(2)}
-                        </td>
-
-                        <td
-                          style={{
-                            ...cellStyle,
-                            color: "#34d399",
-                            fontWeight: "600"
-                          }}
-                        >
-                          ₹{(
-                            Number(record.quantity || 0) *
-                            Number(record.rate || 0)
-                          ).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="meal-history-empty">
+                <span>🍽️</span>
+                <h3>No Meal Records Found</h3>
+                <p>
+                  Your recorded hostel meals will appear here.
+                </p>
               </div>
+            ) : (
+              <>
+                <div className="meal-records-table-wrapper">
+                  <table className="meal-records-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Meal</th>
+                        <th>Quantity</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {records.map((record) => (
+                        <tr key={record._id}>
+                          <td>
+                            {record.date
+                              ? new Date(
+                                  record.date
+                                ).toLocaleDateString()
+                              : "Not specified"}
+                          </td>
+
+                          <td>
+                            <span className="meal-type-label">
+                              {record.mealType}
+                            </span>
+                          </td>
+
+                          <td>{record.quantity}</td>
+
+                          <td>
+                            ₹{Number(
+                              record.rate || 0
+                            ).toFixed(2)}
+                          </td>
+
+                          <td className="meal-total-cell">
+                            ₹{(
+                              Number(record.quantity || 0) *
+                              Number(record.rate || 0)
+                            ).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="meal-mobile-note">
+                  Scroll horizontally to view all columns.
+                </div>
+              </>
             )}
-          </div>
+          </section>
         </>
       )}
     </div>
   );
 }
-
-const cellStyle = {
-  padding: "14px",
-  borderBottom: "1px solid #26364b",
-  color: "#cbd5e1"
-};
 
 export default StudentMealHistory;

@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
-import API from "../services/api";
 import { Link } from "react-router-dom";
+import API from "../services/api";
 
 function StudentProfile() {
   const [profile, setProfile] = useState(null);
@@ -25,9 +25,29 @@ function StudentProfile() {
     fetchProfile();
   }, []);
 
-  if (loading) return <h2 style={{ color: "#f8fafc" }}>Loading profile...</h2>;
-  if (error) return <h2 style={{ color: "#fb7185" }}>{error}</h2>;
-  if (!profile) return <h2 style={{ color: "#f8fafc" }}>Profile not found</h2>;
+  if (loading) {
+    return (
+      <div className="student-profile-page">
+        <p className="profile-status">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="student-profile-page">
+        <p className="profile-error">{error}</p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="student-profile-page">
+        <p className="profile-status">Profile not found.</p>
+      </div>
+    );
+  }
 
   const profileFields = [
     ["Full Name", profile.name],
@@ -45,75 +65,44 @@ function StudentProfile() {
   ];
 
   return (
-    <div className="dashboard-main" style={{ minHeight: "100vh" }}>
+    <main className="student-profile-page">
+
       <Link
         to="/student-dashboard"
-        style={{
-          color: "#38bdf8",
-          textDecoration: "none",
-          fontWeight: "bold"
-        }}
+        className="profile-back-link"
       >
         ← Back to Dashboard
       </Link>
 
-      <h1 className="dashboard-title" style={{ marginTop: "25px" }}>
-        Student Profile
-      </h1>
+      <div className="profile-heading">
+        <h1>My Profile</h1>
+        <p>View your personal and hostel account information.</p>
+      </div>
 
-      <div
-        className="dashboard-card"
-        style={{
-          maxWidth: "650px",
-          marginTop: "25px",
-          color: "#e5e7eb"
-        }}
-      >
-        <div style={{ textAlign: "center" }}>
-          <div
-            style={{
-              width: "75px",
-              height: "75px",
-              margin: "0 auto 15px",
-              borderRadius: "50%",
-              background: "#26364b",
-              color: "#38bdf8",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "30px",
-              fontWeight: "bold"
-            }}
-          >
-            {profile.name?.charAt(0).toUpperCase()}
+      <section className="student-profile-card">
+
+        <div className="profile-user-section">
+          <div className="profile-avatar">
+            {profile.name?.charAt(0).toUpperCase() || "S"}
           </div>
 
-          <h2 style={{ color: "#f8fafc" }}>{profile.name}</h2>
-          <p style={{ color: "#94a3b8" }}>Student Account</p>
+          <h2>{profile.name}</h2>
+          <p>Student Account</p>
         </div>
 
-        <hr style={{ borderColor: "#334155", margin: "22px 0" }} />
+        <div className="profile-divider"></div>
 
-        {profileFields.map(([label, value]) => (
-          <div
-            key={label}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: "15px",
-              flexWrap: "wrap",
-              padding: "13px 5px",
-              borderBottom: "1px solid #26364b"
-            }}
-          >
-            <strong style={{ color: "#94a3b8" }}>{label}</strong>
-            <span style={{ color: "#f1f5f9", textAlign: "right" }}>
-              {value || "Not available"}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+        <div className="profile-details">
+          {profileFields.map(([label, value]) => (
+            <div className="profile-row" key={label}>
+              <strong>{label}</strong>
+              <span>{value || "Not available"}</span>
+            </div>
+          ))}
+        </div>
+
+      </section>
+    </main>
   );
 }
 

@@ -189,133 +189,58 @@ function Fees() {
 
   return (
     <main className="fees-page">
-      <style>{`
-        .fees-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 28px 18px;
-          color: #172033;
-          font-family: Arial, sans-serif;
-        }
-        .fees-page h1 { margin-bottom: 8px; }
-        .fees-subtitle { color: #667085; margin-bottom: 24px; }
-        .fee-summary {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 14px;
-          margin-bottom: 26px;
-        }
-        .fee-stat, .fee-panel, .fee-card {
-          background: #fff;
-          border: 1px solid #e4e7ec;
-          border-radius: 12px;
-          padding: 18px;
-          box-shadow: 0 3px 12px #1018280a;
-        }
-        .fee-stat span { color: #667085; font-size: 14px; }
-        .fee-stat h2 { margin: 10px 0 0; font-size: 23px; }
-        .fee-panel { margin-bottom: 26px; }
-        .fee-form {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-          gap: 14px;
-          align-items: end;
-        }
-        .fee-field { display: flex; flex-direction: column; gap: 7px; }
-        .fee-field label { font-size: 14px; font-weight: 600; }
-        .fee-field input, .fee-field select, .fee-field textarea {
-          width: 100%;
-          box-sizing: border-box;
-          padding: 10px;
-          border: 1px solid #d0d5dd;
-          border-radius: 7px;
-          font: inherit;
-          background: #fff;
-        }
-        .fee-field textarea { resize: vertical; min-height: 40px; }
-        .fee-button {
-          border: 0;
-          border-radius: 7px;
-          padding: 11px 15px;
-          cursor: pointer;
-          font-weight: 600;
-          background: #175cd3;
-          color: white;
-        }
-        .fee-button:disabled { opacity: .6; cursor: not-allowed; }
-        .fee-button.delete { background: #b42318; }
-        .fee-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-          gap: 16px;
-        }
-        .fee-card h3 { margin-top: 0; }
-        .fee-card p { margin: 9px 0; overflow-wrap: anywhere; }
-        .fee-status {
-          display: inline-block;
-          padding: 5px 9px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 700;
-          background: #f2f4f7;
-        }
-        .fee-status.paid { color: #027a48; background: #ecfdf3; }
-        .fee-status.pending { color: #b54708; background: #fffaeb; }
-        .fee-status.partial { color: #175cd3; background: #eff8ff; }
-        .fee-payment {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-top: 14px;
-        }
-        .fee-payment .fee-field:first-child { grid-column: 1 / -1; }
-        .fee-payment button { grid-column: 1 / -1; }
-        .fee-history { padding-left: 18px; font-size: 13px; }
-        .fee-error, .fee-success {
-          padding: 12px;
-          border-radius: 8px;
-          margin: 14px 0;
-        }
-        .fee-error { color: #b42318; background: #fef3f2; }
-        .fee-success { color: #027a48; background: #ecfdf3; }
-        .fee-muted { color: #667085; font-size: 13px; }
-        @media (max-width: 480px) {
-          .fees-page { padding: 18px 10px; }
-          .fee-payment { grid-template-columns: 1fr; }
-          .fee-payment .fee-field:first-child,
-          .fee-payment button { grid-column: auto; }
-        }
-      `}</style>
+      <header className="fees-header">
+        <div>
+          <p className="fees-eyebrow">ADMINISTRATION</p>
+          <h1>Fee Management</h1>
+          <p className="fees-subtitle">
+            Create hostel fee records, record payments, and track outstanding
+            balances.
+          </p>
+        </div>
+      </header>
 
-      <h1>Fee Management</h1>
-      <p className="fees-subtitle">
-        Create hostel fee records, record payments, and track outstanding balances.
-      </p>
+      {error && (
+        <div className="fee-alert fee-error" role="alert">
+          {error}
+        </div>
+      )}
 
-      {error && <div className="fee-error" role="alert">{error}</div>}
-      {message && <div className="fee-success" role="status">{message}</div>}
+      {message && (
+        <div className="fee-alert fee-success" role="status">
+          {message}
+        </div>
+      )}
 
       <section className="fee-summary">
-        <div className="fee-stat">
+        <article className="fee-stat">
           <span>Total Fees</span>
           <h2>{formatMoney(totalFees)}</h2>
-        </div>
-        <div className="fee-stat">
+        </article>
+
+        <article className="fee-stat">
           <span>Total Collected</span>
           <h2>{formatMoney(totalCollected)}</h2>
-        </div>
-        <div className="fee-stat">
+        </article>
+
+        <article className="fee-stat">
           <span>Outstanding Balance</span>
           <h2>{formatMoney(totalBalance)}</h2>
-        </div>
-        <div className="fee-stat">
+        </article>
+
+        <article className="fee-stat">
           <span>Fee Records</span>
           <h2>{fees.length}</h2>
-        </div>
+        </article>
       </section>
 
       <section className="fee-panel">
-        <h2>Create Fee Record</h2>
+        <div className="fee-section-heading">
+          <div>
+            <h2>Create Fee Record</h2>
+            <p>Add a new fee entry for a hostel student.</p>
+          </div>
+        </div>
 
         <form className="fee-form" onSubmit={handleCreateFee}>
           <div className="fee-field">
@@ -401,13 +326,21 @@ function Fees() {
         )}
       </section>
 
-      <section>
-        <h2>Student Fee Records</h2>
+      <section className="fee-records-section">
+        <div className="fee-section-heading">
+          <div>
+            <h2>Student Fee Records</h2>
+            <p>View balances, payment history, and record new payments.</p>
+          </div>
+          <span className="fee-record-count">{fees.length} records</span>
+        </div>
 
         {loading ? (
-          <p>Loading fee records...</p>
+          <div className="fee-empty-state">Loading fee records...</div>
         ) : fees.length === 0 ? (
-          <p>No fee records found. Create your first fee record above.</p>
+          <div className="fee-empty-state">
+            No fee records found. Create your first fee record above.
+          </div>
         ) : (
           <div className="fee-list">
             {fees.map((fee) => {
@@ -423,113 +356,147 @@ function Fees() {
 
               return (
                 <article className="fee-card" key={fee._id}>
-                  <h3>{student.name || "Unknown Student"}</h3>
-                  <p>
-                    <strong>Student ID:</strong>{" "}
-                    {student.studentId || "—"}
-                  </p>
-                  <p>
-                    <strong>Room:</strong> {student.roomNumber || "—"}
-                  </p>
-                  <p>
-                    <strong>Billing Period:</strong> {fee.billingPeriod}
-                  </p>
-                  <p>
-                    <strong>Total Fee:</strong> {formatMoney(fee.totalFee)}
-                  </p>
-                  <p>
-                    <strong>Amount Paid:</strong> {formatMoney(fee.amountPaid)}
-                  </p>
-                  <p>
-                    <strong>Balance:</strong> {formatMoney(balance)}
-                  </p>
-                  <p>
-                    <strong>Due Date:</strong> {formatDate(fee.dueDate)}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>{" "}
+                  <div className="fee-card-header">
+                    <div>
+                      <p className="fee-card-label">STUDENT</p>
+                      <h3>{student.name || "Unknown Student"}</h3>
+                      <p className="fee-student-id">
+                        ID: {student.studentId || "—"}
+                      </p>
+                    </div>
+
                     <span className={`fee-status ${statusClass}`}>
                       {status}
                     </span>
-                  </p>
+                  </div>
+
+                  <div className="fee-details-grid">
+                    <div>
+                      <span>Room</span>
+                      <strong>{student.roomNumber || "—"}</strong>
+                    </div>
+                    <div>
+                      <span>Billing Period</span>
+                      <strong>{fee.billingPeriod || "—"}</strong>
+                    </div>
+                    <div>
+                      <span>Total Fee</span>
+                      <strong>{formatMoney(fee.totalFee)}</strong>
+                    </div>
+                    <div>
+                      <span>Amount Paid</span>
+                      <strong>{formatMoney(fee.amountPaid)}</strong>
+                    </div>
+                    <div>
+                      <span>Balance</span>
+                      <strong className="fee-balance">
+                        {formatMoney(balance)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Due Date</span>
+                      <strong>{formatDate(fee.dueDate)}</strong>
+                    </div>
+                  </div>
 
                   {fee.notes && (
-                    <p><strong>Notes:</strong> {fee.notes}</p>
+                    <p className="fee-notes">
+                      <strong>Notes:</strong> {fee.notes}
+                    </p>
                   )}
 
-                  <h4>Payment History</h4>
-                  {fee.payments?.length ? (
-                    <ul className="fee-history">
-                      {fee.payments.map((payment) => (
-                        <li key={payment._id}>
-                          {formatMoney(payment.amount)} — {payment.method} —{" "}
-                          {formatDate(payment.paymentDate)}
-                          {payment.reference
-                            ? ` — Ref: ${payment.reference}`
-                            : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="fee-muted">No payments recorded yet.</p>
-                  )}
+                  <div className="fee-history-section">
+                    <h4>Payment History</h4>
+
+                    {fee.payments?.length ? (
+                      <ul className="fee-history">
+                        {fee.payments.map((payment) => (
+                          <li key={payment._id}>
+                            <strong>{formatMoney(payment.amount)}</strong>
+                            <span>{payment.method}</span>
+                            <span>{formatDate(payment.paymentDate)}</span>
+                            {payment.reference && (
+                              <span>Ref: {payment.reference}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="fee-muted">
+                        No payments recorded yet.
+                      </p>
+                    )}
+                  </div>
 
                   {balance > 0 && (
                     <form
                       className="fee-payment"
                       onSubmit={(event) => handleAddPayment(event, fee)}
                     >
-                      <div className="fee-field">
-                        <label>Payment Amount (₹)</label>
-                        <input
-                          type="number"
-                          min="0.01"
-                          max={balance}
-                          step="0.01"
-                          value={paymentForms[fee._id]?.amount || ""}
-                          onChange={(event) =>
-                            handlePaymentChange(
-                              fee._id,
-                              "amount",
-                              event.target.value
-                            )
-                          }
-                          required
-                        />
-                      </div>
+                      <h4>Record a Payment</h4>
 
-                      <div className="fee-field">
-                        <label>Payment Method</label>
-                        <select
-                          value={paymentForms[fee._id]?.method || "UPI"}
-                          onChange={(event) =>
-                            handlePaymentChange(
-                              fee._id,
-                              "method",
-                              event.target.value
-                            )
-                          }
-                        >
-                          <option value="UPI">UPI</option>
-                          <option value="Cash">Cash</option>
-                          <option value="Bank Transfer">Bank Transfer</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
+                      <div className="fee-payment-fields">
+                        <div className="fee-field">
+                          <label htmlFor={`amount-${fee._id}`}>
+                            Payment Amount (₹)
+                          </label>
+                          <input
+                            id={`amount-${fee._id}`}
+                            type="number"
+                            min="0.01"
+                            max={balance}
+                            step="0.01"
+                            value={paymentForms[fee._id]?.amount || ""}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                fee._id,
+                                "amount",
+                                event.target.value
+                              )
+                            }
+                            required
+                          />
+                        </div>
 
-                      <div className="fee-field">
-                        <label>Reference (optional)</label>
-                        <input
-                          placeholder="Transaction ID"
-                          value={paymentForms[fee._id]?.reference || ""}
-                          onChange={(event) =>
-                            handlePaymentChange(
-                              fee._id,
-                              "reference",
-                              event.target.value
-                            )
-                          }
-                        />
+                        <div className="fee-field">
+                          <label htmlFor={`method-${fee._id}`}>
+                            Payment Method
+                          </label>
+                          <select
+                            id={`method-${fee._id}`}
+                            value={paymentForms[fee._id]?.method || "UPI"}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                fee._id,
+                                "method",
+                                event.target.value
+                              )
+                            }
+                          >
+                            <option value="UPI">UPI</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+
+                        <div className="fee-field">
+                          <label htmlFor={`reference-${fee._id}`}>
+                            Reference (optional)
+                          </label>
+                          <input
+                            id={`reference-${fee._id}`}
+                            placeholder="Transaction ID"
+                            value={paymentForms[fee._id]?.reference || ""}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                fee._id,
+                                "reference",
+                                event.target.value
+                              )
+                            }
+                          />
+                        </div>
                       </div>
 
                       <button className="fee-button" type="submit">
@@ -542,7 +509,6 @@ function Fees() {
                     <button
                       className="fee-button delete"
                       type="button"
-                      style={{ marginTop: 12 }}
                       onClick={() => handleDeleteFee(fee)}
                     >
                       Delete Fee Record

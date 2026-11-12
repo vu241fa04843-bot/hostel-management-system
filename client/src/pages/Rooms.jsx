@@ -83,7 +83,11 @@ function Rooms() {
       return;
     }
 
-    if (form.monthlyFee === "" || !Number.isFinite(monthlyFee) || monthlyFee < 0) {
+    if (
+      form.monthlyFee === "" ||
+      !Number.isFinite(monthlyFee) ||
+      monthlyFee < 0
+    ) {
       setError("Please enter a valid monthly fee.");
       return;
     }
@@ -144,6 +148,7 @@ function Rooms() {
       }));
 
       setMessage("Student assigned to the room successfully.");
+
       await Promise.all([fetchRooms(), fetchStudents()]);
     } catch (err) {
       setError(
@@ -173,6 +178,7 @@ function Rooms() {
       );
 
       setMessage("Student removed from the room successfully.");
+
       await Promise.all([fetchRooms(), fetchStudents()]);
     } catch (err) {
       setError(
@@ -217,7 +223,6 @@ function Rooms() {
     }
   };
 
-  // Students already assigned through the Room Management module.
   const assignedStudentIds = new Set(
     rooms.flatMap((room) =>
       (room.students || []).map((student) =>
@@ -226,7 +231,6 @@ function Rooms() {
     )
   );
 
-  // Exclude students who have a manually entered room number.
   const availableStudents = students.filter(
     (student) =>
       !assignedStudentIds.has(student._id) &&
@@ -248,247 +252,66 @@ function Rooms() {
   if (loading) {
     return (
       <main className="rooms-page">
-        <p>Loading room management...</p>
+        <div className="rooms-loading">
+          Loading room management...
+        </div>
       </main>
     );
   }
 
   return (
     <main className="rooms-page">
-      <style>{`
-        .rooms-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 28px 20px 50px;
-          color: #172033;
-          font-family: Arial, sans-serif;
-        }
-        .rooms-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 16px;
-          flex-wrap: wrap;
-          margin-bottom: 24px;
-        }
-        .rooms-header h1 {
-          margin: 0 0 8px;
-          font-size: 30px;
-        }
-        .rooms-header p { margin: 0; color: #64748b; }
-        .rooms-back {
-          color: #2563eb;
-          text-decoration: none;
-          font-weight: 600;
-        }
-        .rooms-stats {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 16px;
-          margin-bottom: 26px;
-        }
-        .rooms-stat, .rooms-panel, .room-card {
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 14px;
-          padding: 20px;
-          box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
-        }
-        .rooms-stat span {
-          color: #64748b;
-          font-size: 14px;
-        }
-        .rooms-stat strong {
-          display: block;
-          font-size: 28px;
-          margin-top: 8px;
-        }
-        .rooms-panel { margin-bottom: 26px; }
-        .rooms-panel h2, .room-card h2 {
-          margin-top: 0;
-        }
-        .rooms-form {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 16px;
-        }
-        .rooms-field {
-          display: flex;
-          flex-direction: column;
-          gap: 7px;
-        }
-        .rooms-field label {
-          font-size: 14px;
-          font-weight: 600;
-        }
-        .rooms-field input, .rooms-field select,
-        .room-assign select {
-          box-sizing: border-box;
-          width: 100%;
-          padding: 11px 12px;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          background: white;
-          font-size: 14px;
-        }
-        .rooms-button {
-          border: 0;
-          border-radius: 8px;
-          padding: 11px 15px;
-          font-weight: 600;
-          cursor: pointer;
-          background: #2563eb;
-          color: white;
-        }
-        .rooms-button:disabled {
-          opacity: .55;
-          cursor: not-allowed;
-        }
-        .rooms-button.secondary { background: #475569; }
-        .rooms-button.danger { background: #dc2626; }
-        .rooms-form .rooms-button { align-self: end; }
-        .rooms-alert {
-          padding: 12px 15px;
-          border-radius: 9px;
-          margin-bottom: 18px;
-        }
-        .rooms-alert.success {
-          color: #166534;
-          background: #dcfce7;
-        }
-        .rooms-alert.error {
-          color: #991b1b;
-          background: #fee2e2;
-        }
-        .rooms-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 18px;
-        }
-        .room-card { min-width: 0; }
-        .room-card-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        .room-card h2 { margin-bottom: 7px; }
-        .room-card p {
-          margin: 7px 0;
-          color: #64748b;
-          font-size: 14px;
-        }
-        .room-status {
-          padding: 6px 9px;
-          border-radius: 20px;
-          background: #dcfce7;
-          color: #166534;
-          font-size: 12px;
-          white-space: nowrap;
-        }
-        .room-status.full {
-          background: #fee2e2;
-          color: #991b1b;
-        }
-        .room-progress {
-          height: 8px;
-          border-radius: 10px;
-          overflow: hidden;
-          background: #e2e8f0;
-          margin: 13px 0;
-        }
-        .room-progress div {
-          height: 100%;
-          background: #2563eb;
-        }
-        .room-assign {
-          display: flex;
-          gap: 10px;
-          margin-top: 16px;
-        }
-        .room-assign select { flex: 1; min-width: 0; }
-        .room-students {
-          border-top: 1px solid #e2e8f0;
-          margin-top: 18px;
-          padding-top: 14px;
-        }
-        .room-students h3 { font-size: 16px; }
-        .room-student {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          padding: 10px 0;
-          border-bottom: 1px solid #f1f5f9;
-        }
-        .room-student:last-child { border-bottom: 0; }
-        .room-student small {
-          display: block;
-          color: #64748b;
-          margin-top: 4px;
-        }
-        .room-student .rooms-button {
-          padding: 7px 10px;
-          font-size: 12px;
-        }
-        .room-delete {
-          margin-top: 16px;
-          width: 100%;
-        }
-        .rooms-empty {
-          padding: 30px;
-          text-align: center;
-          color: #64748b;
-          background: #f8fafc;
-          border-radius: 12px;
-        }
-        @media (max-width: 760px) {
-          .rooms-stats, .rooms-grid, .rooms-form {
-            grid-template-columns: 1fr;
-          }
-          .room-assign { flex-direction: column; }
-        }
-      `}</style>
-
       <header className="rooms-header">
         <div>
+          <span className="rooms-eyebrow">ADMIN MANAGEMENT</span>
           <h1>Hostel Room Management</h1>
-          <p>Create rooms, assign students, and track available beds.</p>
+          <p>
+            Create rooms, assign students, and track available beds.
+          </p>
         </div>
+
         <Link className="rooms-back" to="/students">
           ← Back to Students
         </Link>
       </header>
 
       {message && (
-        <div className="rooms-alert success" role="status">
+        <div className="rooms-alert rooms-success" role="status">
           {message}
         </div>
       )}
 
       {error && (
-        <div className="rooms-alert error" role="alert">
+        <div className="rooms-alert rooms-error" role="alert">
           {error}
         </div>
       )}
 
       <section className="rooms-stats">
-        <div className="rooms-stat">
+        <div className="rooms-stat-card">
           <span>Total Rooms</span>
           <strong>{rooms.length}</strong>
         </div>
-        <div className="rooms-stat">
+
+        <div className="rooms-stat-card">
           <span>Occupied Beds</span>
           <strong>{occupiedBeds}</strong>
         </div>
-        <div className="rooms-stat">
+
+        <div className="rooms-stat-card">
           <span>Available Beds</span>
           <strong>{availableBeds}</strong>
         </div>
       </section>
 
       <section className="rooms-panel">
-        <h2>Create a Room</h2>
+        <div className="rooms-panel-heading">
+          <div>
+            <h2>Create a Room</h2>
+            <p>Add a new room to the hostel.</p>
+          </div>
+        </div>
+
         <form className="rooms-form" onSubmit={handleCreateRoom}>
           <div className="rooms-field">
             <label htmlFor="roomNumber">Room Number</label>
@@ -557,18 +380,33 @@ function Rooms() {
             />
           </div>
 
-          <button className="rooms-button" disabled={saving} type="submit">
+          <button
+            className="rooms-button rooms-primary-button"
+            disabled={saving}
+            type="submit"
+          >
             {saving ? "Please wait..." : "+ Create Room"}
           </button>
         </form>
       </section>
 
-      <section>
-        <h2>Rooms and Student Allocation</h2>
+      <section className="rooms-list-section">
+        <div className="rooms-list-heading">
+          <div>
+            <h2>Rooms and Student Allocation</h2>
+            <p>Manage room occupancy and student assignments.</p>
+          </div>
+
+          <span className="rooms-count">{rooms.length} Rooms</span>
+        </div>
 
         {rooms.length === 0 ? (
           <div className="rooms-empty">
-            No rooms created yet. Use the form above to create your first room.
+            <span>🏠</span>
+            <h3>No Rooms Created Yet</h3>
+            <p>
+              Use the form above to create your first hostel room.
+            </p>
           </div>
         ) : (
           <div className="rooms-grid">
@@ -577,33 +415,54 @@ function Rooms() {
               const occupied = roomStudents.length;
               const capacity = Number(room.capacity);
               const isFull = occupied >= capacity;
+
               const percentage =
-                capacity > 0 ? Math.min(100, (occupied / capacity) * 100) : 0;
+                capacity > 0
+                  ? Math.min(100, (occupied / capacity) * 100)
+                  : 0;
 
               return (
                 <article className="room-card" key={room._id}>
                   <div className="room-card-top">
                     <div>
-                      <h2>Room {room.roomNumber}</h2>
-                      <p>Block {room.block} · Floor {room.floor}</p>
+                      <span className="room-card-label">
+                        HOSTEL ROOM
+                      </span>
+                      <h3>Room {room.roomNumber}</h3>
+                      <p>
+                        Block {room.block} · Floor {room.floor}
+                      </p>
                     </div>
-                    <span className={`room-status ${isFull ? "full" : ""}`}>
+
+                    <span
+                      className={`room-status ${
+                        isFull ? "room-full" : "room-available"
+                      }`}
+                    >
                       {isFull ? "Full" : "Available"}
                     </span>
                   </div>
 
-                  <p>
-                    <strong>Capacity:</strong> {occupied} / {capacity} students
-                  </p>
-                  <p>
-                    <strong>Monthly Fee:</strong>{" "}
-                    ₹{Number(room.monthlyFee || 0).toLocaleString("en-IN")}
-                  </p>
+                  <div className="room-information">
+                    <div>
+                      <span>Occupancy</span>
+                      <strong>
+                        {occupied} / {capacity}
+                      </strong>
+                    </div>
 
-                  <div
-                    className="room-progress"
-                    aria-label={`${occupied} of ${capacity} beds occupied`}
-                  >
+                    <div>
+                      <span>Monthly Fee</span>
+                      <strong>
+                        ₹
+                        {Number(room.monthlyFee || 0).toLocaleString(
+                          "en-IN"
+                        )}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="room-progress">
                     <div style={{ width: `${percentage}%` }} />
                   </div>
 
@@ -617,9 +476,14 @@ function Rooms() {
                           [room._id]: e.target.value,
                         }))
                       }
-                      disabled={saving || isFull || availableStudents.length === 0}
+                      disabled={
+                        saving ||
+                        isFull ||
+                        availableStudents.length === 0
+                      }
                     >
                       <option value="">Select a student</option>
+
                       {availableStudents.map((student) => (
                         <option key={student._id} value={student._id}>
                           {student.name} ({student.studentId})
@@ -628,7 +492,7 @@ function Rooms() {
                     </select>
 
                     <button
-                      className="rooms-button"
+                      className="rooms-button rooms-primary-button"
                       type="button"
                       disabled={
                         saving ||
@@ -642,24 +506,27 @@ function Rooms() {
                   </div>
 
                   {availableStudents.length === 0 && !isFull && (
-                    <p>
-                      No unassigned students available. Add a student or clear
-                      their manually entered room number in Edit Student.
+                    <p className="rooms-no-students">
+                      No unassigned students available. Add a student or
+                      clear their manually entered room number in Edit
+                      Student.
                     </p>
                   )}
 
                   <div className="room-students">
-                    <h3>Assigned Students ({occupied})</h3>
+                    <h4>Assigned Students ({occupied})</h4>
 
                     {roomStudents.length === 0 ? (
-                      <p>No students assigned to this room yet.</p>
+                      <p className="room-no-assigned">
+                        No students assigned to this room yet.
+                      </p>
                     ) : (
                       roomStudents.map((student) => (
                         <div
                           className="room-student"
                           key={student._id}
                         >
-                          <div>
+                          <div className="room-student-details">
                             <strong>
                               {student.name || "Student"}
                             </strong>
@@ -672,7 +539,7 @@ function Rooms() {
                           </div>
 
                           <button
-                            className="rooms-button danger"
+                            className="rooms-button rooms-danger-button"
                             type="button"
                             disabled={saving}
                             onClick={() =>
@@ -687,7 +554,7 @@ function Rooms() {
                   </div>
 
                   <button
-                    className="rooms-button danger room-delete"
+                    className="rooms-button rooms-danger-button room-delete"
                     type="button"
                     disabled={saving || occupied > 0}
                     onClick={() => handleDeleteRoom(room)}

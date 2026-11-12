@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
@@ -6,17 +7,25 @@ export default function Outings() {
   const [outings, setOutings] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [updatingId, setUpdatingId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     student: "",
     destination: "",
     purpose: "",
     outingDate: "",
     returnDate: "",
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
 
   const loadData = async () => {
     try {
+      setLoading(true);
+
       const [studentResponse, outingResponse] =
         await Promise.all([
           API.get("/students"),
@@ -31,6 +40,8 @@ export default function Outings() {
         err.response?.data?.message ||
           "Unable to load outing data."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,14 +50,18 @@ export default function Outings() {
   }, []);
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
 
     if (
       new Date(form.returnDate) <=
@@ -57,26 +72,21 @@ export default function Outings() {
     }
 
     try {
+      setSubmitting(true);
+
       await API.post("/outings", form);
 
       setMessage("Outing request submitted successfully!");
-      setError("");
+      setForm(emptyForm);
 
-      setForm({
-        student: "",
-        destination: "",
-        purpose: "",
-        outingDate: "",
-        returnDate: "",
-      });
-
-      loadData();
+      await loadData();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to submit outing request."
       );
-      setMessage("");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -88,19 +98,27 @@ export default function Outings() {
     if (remarks === null) return;
 
     try {
+      setUpdatingId(id);
+      setMessage("");
+      setError("");
+
       await API.patch(`/outings/${id}`, {
         status,
         remarks,
       });
 
-      setMessage(`Outing request ${status.toLowerCase()}!`);
-      setError("");
-      loadData();
+      setMessage(
+        `Outing request ${status.toLowerCase()}!`
+      );
+
+      await loadData();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to update outing status."
       );
+    } finally {
+      setUpdatingId("");
     }
   };
 
@@ -110,16 +128,21 @@ export default function Outings() {
     }
 
     try {
+      setDeletingId(id);
+      setMessage("");
+      setError("");
+
       await API.delete(`/outings/${id}`);
 
       setMessage("Outing request deleted successfully!");
-      setError("");
-      loadData();
+      await loadData();
     } catch (err) {
       setError(
         err.response?.data?.message ||
           "Unable to delete outing request."
       );
+    } finally {
+      setDeletingId("");
     }
   };
 
@@ -136,301 +159,288 @@ export default function Outings() {
   ).length;
 
   return (
-    <div style={styles.container}>
-      <h1>Outing Management</h1>
+    <div className="outings-page">
+      <div className="outings-header">
+        <div>
+          <h1>Outing Management</h1>
+          <p>
+            Manage student outing requests and approvals.
+          </p>
+        </div>
 
-      <p>Manage student outing requests and approvals.</p>
+        <button
+          type="button"
+          className="outings-refresh"
+          onClick={loadData}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "Refresh"}
+        </button>
+      </div>
 
       {message && (
-        <p style={{ color: "green" }}>{message}</p>
+        <div className="outings-alert success">
+          {message}
+        </div>
       )}
 
       {error && (
-        <p style={{ color: "red" }}>{error}</p>
+        <div className="outings-alert error">
+          {error}
+        </div>
       )}
 
-      <div style={styles.cards}>
-        <div style={styles.card}>
-          <h3>Total Requests</h3>
+      <div className="outings-stats">
+        <div className="outings-stat-card">
+          <span>Total Requests</span>
           <h2>{outings.length}</h2>
         </div>
 
-        <div style={styles.card}>
-          <h3>Pending</h3>
+        <div className="outings-stat-card pending">
+          <span>Pending</span>
           <h2>{pending}</h2>
         </div>
 
-        <div style={styles.card}>
-          <h3>Approved</h3>
+        <div className="outings-stat-card approved">
+          <span>Approved</span>
           <h2>{approved}</h2>
         </div>
 
-        <div style={styles.card}>
-          <h3>Rejected</h3>
+        <div className="outings-stat-card rejected">
+          <span>Rejected</span>
           <h2>{rejected}</h2>
         </div>
       </div>
 
-      <div style={styles.formContainer}>
-        <h2>Submit Outing Request</h2>
+      <section className="outings-form-section">
+        <div className="outings-section-heading">
+          <h2>Submit Outing Request</h2>
+          <p>Enter the student's outing details below.</p>
+        </div>
 
         <form onSubmit={handleSubmit}>
-          <label>Select Student</label>
+          <div className="outings-form-grid">
+            <div className="outings-field full-width">
+              <label htmlFor="outing-student">
+                Select Student
+              </label>
 
-          <select
-            name="student"
-            value={form.student}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          >
-            <option value="">Select Student</option>
-
-            {students.map((student) => (
-              <option
-                key={student._id}
-                value={student._id}
+              <select
+                id="outing-student"
+                name="student"
+                value={form.student}
+                onChange={handleChange}
+                required
               >
-                {student.name} ({student.studentId})
-              </option>
-            ))}
-          </select>
+                <option value="">Select Student</option>
 
-          <label>Destination</label>
+                {students.map((student) => (
+                  <option
+                    key={student._id}
+                    value={student._id}
+                  >
+                    {student.name} ({student.studentId})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <input
-            type="text"
-            name="destination"
-            value={form.destination}
-            onChange={handleChange}
-            placeholder="Enter destination"
-            required
-            style={styles.input}
-          />
+            <div className="outings-field">
+              <label htmlFor="outing-destination">
+                Destination
+              </label>
 
-          <label>Purpose</label>
+              <input
+                id="outing-destination"
+                type="text"
+                name="destination"
+                value={form.destination}
+                onChange={handleChange}
+                placeholder="Enter destination"
+                required
+              />
+            </div>
 
-          <textarea
-            name="purpose"
-            value={form.purpose}
-            onChange={handleChange}
-            placeholder="Enter outing purpose"
-            required
-            style={styles.input}
-          />
+            <div className="outings-field">
+              <label htmlFor="outing-purpose">
+                Purpose
+              </label>
 
-          <label>Outing Date and Time</label>
+              <input
+                id="outing-purpose"
+                type="text"
+                name="purpose"
+                value={form.purpose}
+                onChange={handleChange}
+                placeholder="Enter outing purpose"
+                required
+              />
+            </div>
 
-          <input
-            type="datetime-local"
-            name="outingDate"
-            value={form.outingDate}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+            <div className="outings-field">
+              <label htmlFor="outing-date">
+                Outing Date and Time
+              </label>
 
-          <label>Return Date and Time</label>
+              <input
+                id="outing-date"
+                type="datetime-local"
+                name="outingDate"
+                value={form.outingDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <input
-            type="datetime-local"
-            name="returnDate"
-            value={form.returnDate}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
+            <div className="outings-field">
+              <label htmlFor="return-date">
+                Return Date and Time
+              </label>
 
-          <button type="submit" style={styles.submitButton}>
-            Submit Request
+              <input
+                id="return-date"
+                type="datetime-local"
+                name="returnDate"
+                value={form.returnDate}
+                onChange={handleChange}
+                min={form.outingDate || undefined}
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="outings-submit"
+            disabled={submitting}
+          >
+            {submitting ? "Submitting..." : "Submit Request"}
           </button>
         </form>
-      </div>
+      </section>
 
-      <div style={styles.tableContainer}>
-        <h2>Outing Requests</h2>
+      <section className="outings-table-section">
+        <div className="outings-section-heading">
+          <h2>Outing Requests</h2>
+          <p>View and manage all student outing requests.</p>
+        </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Destination</th>
-                <th>Purpose</th>
-                <th>Outing Date</th>
-                <th>Return Date</th>
-                <th>Status</th>
-                <th>Remarks</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {outings.length === 0 ? (
+        {loading ? (
+          <p className="outings-empty">Loading outing requests...</p>
+        ) : (
+          <div className="outings-table-wrapper">
+            <table className="outings-table">
+              <thead>
                 <tr>
-                  <td colSpan="8">
-                    No outing requests found.
-                  </td>
+                  <th>Student</th>
+                  <th>Destination</th>
+                  <th>Purpose</th>
+                  <th>Outing Date</th>
+                  <th>Return Date</th>
+                  <th>Status</th>
+                  <th>Remarks</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                outings.map((item) => (
-                  <tr key={item._id}>
-                    <td>
-                      {item.student?.name || "Unknown"}
-                    </td>
+              </thead>
 
-                    <td>{item.destination}</td>
-
-                    <td>{item.purpose}</td>
-
-                    <td>
-                      {new Date(
-                        item.outingDate
-                      ).toLocaleString()}
-                    </td>
-
-                    <td>
-                      {new Date(
-                        item.returnDate
-                      ).toLocaleString()}
-                    </td>
-
-                    <td>
-                      <strong>{item.status}</strong>
-                    </td>
-
-                    <td>{item.remarks || "-"}</td>
-
-                    <td>
-                      {item.status === "Pending" && (
-                        <>
-                          <button
-                            style={styles.approveButton}
-                            onClick={() =>
-                              updateStatus(
-                                item._id,
-                                "Approved"
-                              )
-                            }
-                          >
-                            Approve
-                          </button>
-
-                          <button
-                            style={styles.rejectButton}
-                            onClick={() =>
-                              updateStatus(
-                                item._id,
-                                "Rejected"
-                              )
-                            }
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-
-                      <button
-                        style={styles.deleteButton}
-                        onClick={() =>
-                          deleteOuting(item._id)
-                        }
-                      >
-                        Delete
-                      </button>
+              <tbody>
+                {outings.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="outings-empty">
+                      No outing requests found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                ) : (
+                  outings.map((item) => (
+                    <tr key={item._id}>
+                      <td>
+                        {item.student?.name || "Unknown"}
+                      </td>
+
+                      <td>{item.destination}</td>
+
+                      <td>{item.purpose}</td>
+
+                      <td>
+                        {new Date(
+                          item.outingDate
+                        ).toLocaleString()}
+                      </td>
+
+                      <td>
+                        {new Date(
+                          item.returnDate
+                        ).toLocaleString()}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`outings-status ${item.status?.toLowerCase()}`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
+
+                      <td>{item.remarks || "-"}</td>
+
+                      <td>
+                        <div className="outings-actions">
+                          {item.status === "Pending" && (
+                            <>
+                              <button
+                                type="button"
+                                className="outings-approve"
+                                disabled={updatingId === item._id}
+                                onClick={() =>
+                                  updateStatus(
+                                    item._id,
+                                    "Approved"
+                                  )
+                                }
+                              >
+                                {updatingId === item._id
+                                  ? "Updating..."
+                                  : "Approve"}
+                              </button>
+
+                              <button
+                                type="button"
+                                className="outings-reject"
+                                disabled={updatingId === item._id}
+                                onClick={() =>
+                                  updateStatus(
+                                    item._id,
+                                    "Rejected"
+                                  )
+                                }
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+
+                          <button
+                            type="button"
+                            className="outings-delete"
+                            disabled={deletingId === item._id}
+                            onClick={() =>
+                              deleteOuting(item._id)
+                            }
+                          >
+                            {deletingId === item._id
+                              ? "Deleting..."
+                              : "Delete"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
-
-const styles = {
-  container: {
-    padding: "25px",
-    fontFamily: "Arial, sans-serif",
-  },
-
-  cards: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit, minmax(150px, 1fr))",
-    gap: "15px",
-    margin: "20px 0",
-  },
-
-  card: {
-    background: "#eaf2ff",
-    padding: "15px",
-    borderRadius: "10px",
-    textAlign: "center",
-  },
-
-  formContainer: {
-    background: "#fff",
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    maxWidth: "550px",
-    marginBottom: "30px",
-  },
-
-  input: {
-    display: "block",
-    width: "100%",
-    padding: "10px",
-    margin: "8px 0 16px",
-    boxSizing: "border-box",
-  },
-
-  submitButton: {
-    background: "#2563eb",
-    color: "white",
-    border: "none",
-    padding: "12px 20px",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-
-  tableContainer: {
-    marginTop: "25px",
-  },
-
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    textAlign: "left",
-  },
-
-  approveButton: {
-    background: "green",
-    color: "white",
-    padding: "7px",
-    border: "none",
-    margin: "3px",
-    cursor: "pointer",
-  },
-
-  rejectButton: {
-    background: "orange",
-    color: "white",
-    padding: "7px",
-    border: "none",
-    margin: "3px",
-    cursor: "pointer",
-  },
-
-  deleteButton: {
-    background: "#dc2626",
-    color: "white",
-    padding: "7px",
-    border: "none",
-    margin: "3px",
-    cursor: "pointer",
-  },
-};

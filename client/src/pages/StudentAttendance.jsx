@@ -31,34 +31,6 @@ function StudentAttendance() {
     fetchAttendance();
   }, []);
 
-  const getStatusStyle = (status) => {
-    if (status === "Present") {
-      return {
-        color: "#34d399",
-        background: "rgba(52, 211, 153, 0.12)"
-      };
-    }
-
-    if (status === "Absent") {
-      return {
-        color: "#fb7185",
-        background: "rgba(251, 113, 133, 0.12)"
-      };
-    }
-
-    if (status === "Leave") {
-      return {
-        color: "#fbbf24",
-        background: "rgba(251, 191, 36, 0.12)"
-      };
-    }
-
-    return {
-      color: "#cbd5e1",
-      background: "rgba(148, 163, 184, 0.12)"
-    };
-  };
-
   const presentCount = records.filter(
     (record) => record.status === "Present"
   ).length;
@@ -80,185 +52,146 @@ function StudentAttendance() {
     {
       label: "Present",
       value: presentCount,
-      color: "#34d399"
+      color: "present"
     },
     {
       label: "Absent",
       value: absentCount,
-      color: "#fb7185"
+      color: "absent"
     },
     {
       label: "Leave",
       value: leaveCount,
-      color: "#fbbf24"
+      color: "leave"
     },
     {
       label: "Attendance",
       value: `${percentage}%`,
-      color: "#38bdf8"
+      color: "percentage"
     }
   ];
 
+  const getStatusClass = (status) => {
+    if (status === "Present") return "attendance-status-present";
+    if (status === "Absent") return "attendance-status-absent";
+    if (status === "Leave") return "attendance-status-leave";
+
+    return "attendance-status-default";
+  };
+
   return (
-    <div className="dashboard-main">
-      <div style={{ marginBottom: "25px" }}>
-        <Link
-          to="/student-dashboard"
-          style={{
-            color: "#38bdf8",
-            textDecoration: "none",
-            fontSize: "14px"
-          }}
-        >
-          ← Back to Student Dashboard
-        </Link>
+    <div className="student-attendance-page">
+      <Link
+        to="/student-dashboard"
+        className="attendance-back-link"
+      >
+        ← Back to Student Dashboard
+      </Link>
 
-        <h1 className="dashboard-title" style={{ marginTop: "18px" }}>
-          My Attendance
-        </h1>
+      <div className="attendance-page-header">
+        <div>
+          <span className="attendance-eyebrow">
+            STUDENT SERVICES
+          </span>
 
-        <p className="dashboard-subtitle">
-          View your hostel attendance records and attendance percentage.
-        </p>
+          <h1>My Attendance</h1>
+
+          <p>
+            View your hostel attendance records and attendance
+            percentage.
+          </p>
+        </div>
       </div>
 
       {loading && (
-        <div className="dashboard-card">
-          <p style={{ color: "#cbd5e1" }}>
-            Loading attendance...
-          </p>
+        <div className="attendance-message-card">
+          <p>Loading attendance records...</p>
         </div>
       )}
 
       {error && (
-        <div
-          style={{
-            padding: "12px",
-            marginBottom: "20px",
-            borderRadius: "8px",
-            color: "#fb7185",
-            background: "rgba(251, 113, 133, 0.12)"
-          }}
-        >
+        <div className="attendance-error">
           {error}
         </div>
       )}
 
       {!loading && !error && (
         <>
-          <div className="dashboard-grid">
+          <div className="attendance-summary-grid">
             {summaryCards.map((card) => (
               <div
                 key={card.label}
-                className="dashboard-card"
-                style={{
-                  borderTop: `4px solid ${card.color}`,
-                  textAlign: "center"
-                }}
+                className={`attendance-summary-card ${card.color}`}
               >
-                <h2
-                  style={{
-                    color: card.color,
-                    fontSize: "28px",
-                    margin: "5px 0"
-                  }}
-                >
-                  {card.value}
-                </h2>
-
-                <p
-                  style={{
-                    color: "#94a3b8",
-                    margin: 0
-                  }}
-                >
-                  {card.label}
-                </p>
+                <span>{card.label}</span>
+                <h2>{card.value}</h2>
               </div>
             ))}
           </div>
 
-          <div className="dashboard-card" style={{ marginTop: "25px" }}>
-            <h2 style={{ color: "#e5e7eb", marginTop: 0 }}>
-              Attendance Records
-            </h2>
+          <section className="attendance-records-card">
+            <div className="attendance-section-heading">
+              <div>
+                <h2>Attendance Records</h2>
+                <p>Your recorded attendance history</p>
+              </div>
+
+              <span className="attendance-record-count">
+                {records.length} Records
+              </span>
+            </div>
 
             {records.length === 0 ? (
-              <p style={{ color: "#94a3b8" }}>
-                No attendance records found.
-              </p>
+              <div className="attendance-empty-state">
+                <span className="attendance-empty-icon">📋</span>
+                <h3>No Attendance Records</h3>
+                <p>
+                  Your attendance records will appear here when
+                  they are available.
+                </p>
+              </div>
             ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table
-                  style={{
-                    width: "100%",
-                    minWidth: "550px",
-                    borderCollapse: "collapse",
-                    color: "#e5e7eb"
-                  }}
-                >
+              <div className="attendance-table-wrapper">
+                <table className="attendance-table">
                   <thead>
-                    <tr style={{ background: "#0f172a" }}>
-                      {["Date", "Status", "Remarks"].map((heading) => (
-                        <th
-                          key={heading}
-                          style={{
-                            padding: "14px",
-                            textAlign: "left",
-                            color: "#38bdf8",
-                            borderBottom: "1px solid #334155"
-                          }}
-                        >
-                          {heading}
-                        </th>
-                      ))}
+                    <tr>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Remarks</th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {records.map((record) => (
                       <tr key={record._id}>
-                        <td style={cellStyle}>
+                        <td>
                           {record.date
                             ? new Date(record.date).toLocaleDateString()
                             : "Not specified"}
                         </td>
 
-                        <td style={cellStyle}>
+                        <td>
                           <span
-                            style={{
-                              ...getStatusStyle(record.status),
-                              padding: "6px 12px",
-                              borderRadius: "20px",
-                              fontWeight: "600",
-                              fontSize: "13px"
-                            }}
+                            className={`attendance-status ${getStatusClass(
+                              record.status
+                            )}`}
                           >
-                            {record.status}
+                            {record.status || "Not specified"}
                           </span>
                         </td>
 
-                        <td style={cellStyle}>
-                          {record.remarks || "-"}
-                        </td>
+                        <td>{record.remarks || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-          </div>
+          </section>
         </>
       )}
     </div>
   );
 }
-
-const cellStyle = {
-  padding: "14px",
-  textAlign: "left",
-  borderBottom: "1px solid #26364b",
-  color: "#cbd5e1"
-};
 
 export default StudentAttendance;

@@ -20,10 +20,13 @@ function StudentComplaints() {
       const response = await API.get("/student-complaints", {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       setComplaints(response.data);
       setError("");
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to load complaints");
+      setError(
+        err.response?.data?.message || "Unable to load complaints"
+      );
     } finally {
       setLoading(false);
     }
@@ -50,159 +53,198 @@ function StudentComplaints() {
       setTitle("");
       setCategory("Room");
       setDescription("");
+
       await fetchComplaints();
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to submit complaint");
+      setError(
+        err.response?.data?.message || "Unable to submit complaint"
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getStatusStyle = (status) => {
-    if (status === "Resolved") {
-      return { color: "#34d399", background: "#064e3b" };
-    }
-    if (status === "In Progress") {
-      return { color: "#fbbf24", background: "#713f12" };
-    }
-    return { color: "#fb7185", background: "#881337" };
-  };
-
-  const inputStyle = {
-    width: "100%",
-    padding: "12px",
-    marginTop: "8px",
-    marginBottom: "18px",
-    border: "1px solid #334155",
-    borderRadius: "8px",
-    background: "#0f172a",
-    color: "#f8fafc",
-    boxSizing: "border-box",
-    fontSize: "15px"
+  const getStatusClass = (status) => {
+    if (status === "Resolved") return "resolved";
+    if (status === "In Progress") return "in-progress";
+    return "pending";
   };
 
   if (loading) {
-    return <main className="dashboard-main">Loading complaints...</main>;
+    return (
+      <main className="student-complaints-page">
+        <p className="complaint-info">Loading complaints...</p>
+      </main>
+    );
   }
 
   return (
-    <main className="dashboard-main" style={{ minHeight: "100vh" }}>
+    <main className="student-complaints-page">
+
       <Link
         to="/student-dashboard"
-        style={{ color: "#38bdf8", textDecoration: "none" }}
+        className="complaint-back-link"
       >
         ← Back to Dashboard
       </Link>
 
-      <header className="dashboard-topbar" style={{ marginTop: "22px" }}>
-        <div>
-          <h1 className="dashboard-title">Student Complaints</h1>
-          <p className="dashboard-subtitle">
-            Submit hostel complaints and track their progress.
-          </p>
-        </div>
+      <header className="complaint-page-header">
+        <h1>Student Complaints</h1>
+        <p>
+          Submit hostel complaints and track their progress.
+        </p>
       </header>
 
       {message && (
-        <p style={{ color: "#34d399", background: "#064e3b", padding: "12px", borderRadius: "8px" }}>
+        <div className="complaint-success">
           {message}
-        </p>
+        </div>
       )}
 
       {error && (
-        <p className="dashboard-error">{error}</p>
+        <div className="complaint-error">
+          {error}
+        </div>
       )}
 
-      <section className="dashboard-card" style={{ maxWidth: "700px" }}>
-        <h2 style={{ color: "#f8fafc" }}>Submit New Complaint</h2>
+      {/* Complaint Form */}
+      <section className="complaint-form-card">
+        <h2>Submit New Complaint</h2>
+        <p className="complaint-description">
+          Provide the details of your issue below.
+        </p>
 
         <form onSubmit={handleSubmit}>
-          <label>Complaint Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter complaint title"
-            maxLength={120}
-            required
-            style={inputStyle}
-          />
 
-          <label>Category</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            style={inputStyle}
-          >
-            {["Room", "Food", "Cleaning", "Water", "Electricity", "Wi-Fi", "Other"].map(item => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
+          <div className="complaint-form-group">
+            <label htmlFor="complaint-title">
+              Complaint Title
+            </label>
 
-          <label>Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Explain your complaint"
-            maxLength={2000}
-            required
-            rows={5}
-            style={inputStyle}
-          />
+            <input
+              id="complaint-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter complaint title"
+              maxLength={120}
+              required
+            />
+          </div>
+
+          <div className="complaint-form-group">
+            <label htmlFor="complaint-category">
+              Category
+            </label>
+
+            <select
+              id="complaint-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {[
+                "Room",
+                "Food",
+                "Cleaning",
+                "Water",
+                "Electricity",
+                "Wi-Fi",
+                "Other"
+              ].map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="complaint-form-group">
+            <label htmlFor="complaint-description">
+              Description
+            </label>
+
+            <textarea
+              id="complaint-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Explain your complaint"
+              maxLength={2000}
+              required
+              rows={5}
+            />
+          </div>
 
           <button
             type="submit"
-            className="dashboard-button"
+            className="complaint-submit-button"
             disabled={submitting}
           >
             {submitting ? "Submitting..." : "Submit Complaint"}
           </button>
+
         </form>
       </section>
 
-      <section className="dashboard-section">
+      {/* Complaint History */}
+      <section className="complaint-history-section">
         <h2>My Complaint History</h2>
 
         {complaints.length === 0 ? (
-          <div className="dashboard-card">
+          <div className="complaint-empty-card">
             You have not submitted any complaints yet.
           </div>
         ) : (
-          <div className="dashboard-grid">
-            {complaints.map(complaint => (
-              <article className="dashboard-card" key={complaint._id}>
-                <div className="dashboard-topbar">
-                  <h3 style={{ color: "#f8fafc", margin: 0 }}>
-                    {complaint.title}
-                  </h3>
+          <div className="complaint-history-grid">
 
-                  <span style={{
-                    ...getStatusStyle(complaint.status),
-                    padding: "6px 12px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "bold"
-                  }}>
+            {complaints.map((complaint) => (
+              <article
+                className="complaint-history-card"
+                key={complaint._id}
+              >
+                <div className="complaint-card-header">
+                  <h3>{complaint.title}</h3>
+
+                  <span
+                    className={`complaint-status ${getStatusClass(
+                      complaint.status
+                    )}`}
+                  >
                     {complaint.status || "Pending"}
                   </span>
                 </div>
 
-                <p><strong>Category:</strong> {complaint.category}</p>
-                <p><strong>Description:</strong> {complaint.description}</p>
-                <p>
-                  <strong>Admin Remarks:</strong>{" "}
-                  {complaint.adminRemarks || "No remarks yet"}
-                </p>
-                <p className="dashboard-subtitle">
-                  Submitted: {complaint.createdAt
-                    ? new Date(complaint.createdAt).toLocaleDateString()
+                <div className="complaint-detail">
+                  <strong>Category</strong>
+                  <span>{complaint.category || "-"}</span>
+                </div>
+
+                <div className="complaint-detail">
+                  <strong>Description</strong>
+                  <span>{complaint.description || "-"}</span>
+                </div>
+
+                <div className="complaint-detail">
+                  <strong>Admin Remarks</strong>
+                  <span>
+                    {complaint.adminRemarks || "No remarks yet"}
+                  </span>
+                </div>
+
+                <p className="complaint-date">
+                  Submitted:{" "}
+                  {complaint.createdAt
+                    ? new Date(
+                        complaint.createdAt
+                      ).toLocaleDateString()
                     : "Not available"}
                 </p>
               </article>
             ))}
+
           </div>
         )}
       </section>
+
     </main>
   );
 }
